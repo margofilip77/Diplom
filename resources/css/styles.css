@@ -1,0 +1,145 @@
+/* Основні стилі */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #e9f5e9; /* Світло-зелений фон */
+}
+
+/* Хедер */
+.header {
+    background: #2d6a4f;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Контейнер входу */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+}
+
+/* Вікно входу */
+.login-box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 350px;
+}
+
+/* Заголовок */
+.login-box h2 {
+    color: #2d6a4f;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.login-box p {
+    color: #555;
+    font-size: 14px;
+}
+
+/* Поля вводу */
+.login-box label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
+    text-align: left;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Запам'ятати мене */
+.remember-me {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.remember-me input {
+    margin-right: 5px;
+}
+
+/* Кнопки */
+.buttons {
+    margin-top: 15px;
+}
+
+.buttons a {
+    color: #2d6a4f;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.buttons a:hover {
+    text-decoration: underline;
+}
+
+.buttons button {
+    background: #2d6a4f;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.buttons button:hover {
+    background: #1b4332;
+}
+
+/* Соціальний вхід */
+.social-login {
+    margin-top: 20px;
+}
+
+.social-login span {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #555;
+}
+
+.social-login a {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.google {
+    background: #ea4335;
+    color: white;
+}
+
+.github {
+    background: #333;
+    color: white;
+}
+
+.google:hover {
+    background: #c1351d;
+}
+
+.github:hover {
+    background: #222;
+}
