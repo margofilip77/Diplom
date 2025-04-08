@@ -6,10 +6,12 @@ use App\Models\Accommodation;
 use Illuminate\Http\Request;
 use App\Models\AccommodationPhoto;
 use Illuminate\Support\Facades\DB;
-use App\Models\MealOption;
+use App\Models\Meal;
+use Illuminate\Support\Facades\Auth;
 
 class AccommodationController extends Controller
 {
+    
     public function index()
     {
         $accommodations = Accommodation::all(); // Отримати всі помешкання
@@ -19,7 +21,20 @@ class AccommodationController extends Controller
     public function show($id)
     {
         $accommodation = Accommodation::with('amenities')->findOrFail($id);
-        return view('accommodations.details', compact('accommodation'));
+
+    // Отримуємо авторизованого користувача
+    $user = Auth::user();
+
+    // Підраховуємо кількість товарів у кошику для цього користувача
+    $cartItemCount = 0;
+
+    if ($user && $user->cart && $user->cart->cartMeals) {
+        $cartItemCount = $user->cart->cartMeals->count();
+    }
+    
+
+    // Повертаємо дані у шаблон
+    return view('accommodations.details', compact('accommodation', 'cartItemCount'));
     }
     
     public function search(Request $request)

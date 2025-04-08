@@ -1,37 +1,26 @@
-@extends('layouts.app')
-
-@section('content')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кошик</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Підключаємо файл стилів -->
+</head>
+<body>
     <div class="container">
-        <h1>Мій кошик</h1>
+        <h1>Ваш Кошик</h1>
 
-        @if(session('message'))
-            <div class="alert alert-success">
-                {{ session('message') }}
-            </div>
-        @endif
+        <div id="cart-container">
+            <!-- Тут буде відображатись кошик -->
+        </div>
 
-        @if($cart && count($cart) > 0)
-            <div class="list-group">
-                @foreach($cart as $accommodationId => $item)
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between">
-                            <span>{{ $item['name'] }} ({{ $item['quantity'] }} шт.)</span>
-                            <span>{{ $item['total_price'] }} грн</span>
-                        </div>
-                        <form action="{{ route('cart.remove', $accommodationId) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
-                        </form>
-                    </div>
-                @endforeach
-            </div>
-            <div class="d-flex justify-content-between">
-                <h4>Загальна вартість: {{ array_sum(array_column($cart, 'total_price')) }} грн</h4>
-                <a href="{{ route('checkout.index') }}" class="btn btn-success">Перейти до оформлення</a>
-            </div>
-        @else
-            <p>Ваш кошик порожній.</p>
-        @endif
+        <div id="cart-summary">
+            <p><strong>Загальна кількість товарів:</strong> <span id="item-count">0</span></p>
+            <p><strong>Загальна вартість:</strong> <span id="total-price">0</span> грн</p>
+            <button id="checkout-btn">Оформити замовлення</button>
+        </div>
     </div>
-@endsection
+
+    <script src="cart.js"></script> <!-- Підключаємо скрипт для роботи з кошиком -->
+</body>
+</html>

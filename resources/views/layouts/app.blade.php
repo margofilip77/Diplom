@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Зелений Туризм</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Встав у <head> -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -28,15 +31,12 @@
                     <li class="nav-item"><a href="{{ route('accommodations.accommodation') }}" class="nav-link">Помешкання</a></li>
                     <li class="nav-item"><a href="/contacts" class="nav-link">Контакти</a></li>
                     <li class="nav-item">
-                    <a class="nav-link" href="{{ route('cart.index') }}">
+                    <a class="nav-link" href="{{ Auth::check() && Auth::user()->cart ? route('cart.show', Auth::user()->cart->id) : '#' }}">
     <i class="fas fa-shopping-cart"></i> Кошик
     <span class="badge bg-danger">
-        {{ Auth::check() ? Auth::user()->cartItems->count() : 0 }}
+        {{ Auth::check() && Auth::user()->cartItems ? Auth::user()->cartItems->count() : 0 }}
     </span>
 </a>
-
-
-
                     </li>
 
                 </ul>
@@ -57,10 +57,6 @@
         @yield('content')
     </div>
 
-    {{-- Футер --}}
-    <footer class="bg-dark text-white text-center p-3 mt-4">
-        &copy; 2025 Зелений Туризм | Усі права захищені
-    </footer>
 
 
     <!-- Bootstrap CSS -->

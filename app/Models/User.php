@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Cart;
 
 class User extends Authenticatable
 {
@@ -46,10 +47,12 @@ class User extends Authenticatable
         ];
     }
     // App\Models\User.php
+    public function cart()
+    {
+        // Тут залежно від структури твоїх даних може бути hasOne або hasMany
+        return $this->hasOne(Cart::class); // Якщо кожен користувач має тільки один кошик
+        // return $this->hasMany(Cart::class); // Якщо кожен користувач може мати кілька кошиків
+    }
 
-public function cartItems()
-{
-    return $this->hasMany(Cart::class);
-}
 
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\MealOption;
 
 class Accommodation extends Model
 {
@@ -38,6 +39,12 @@ public function mealOptions()
 {
     return $this->belongsToMany(MealOption::class, 'accommodation_meal_option')
                 ->withPivot('price'); // Тут можна отримати також ціну
+}
+public function carts()
+{
+    return $this->belongsToMany(Cart::class, 'cart_accommodation') // Точна назва таблиці
+        ->withPivot('checkin_date', 'checkout_date', 'guests_count', 'accommodation_photo') // Додаємо додаткові атрибути
+        ->withTimestamps();
 }
 
 }

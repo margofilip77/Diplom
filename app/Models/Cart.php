@@ -9,31 +9,40 @@ class Cart extends Model
 {
     use HasFactory;
 
+    protected $table = 'carts';
+    // Вказуємо, що ці атрибути можна заповнювати
     protected $fillable = [
         'user_id',
         'accommodation_id',
-        'guests',
         'checkin_date',
         'checkout_date',
-        'total_price',
-        'photo_url'
+        'guests_count',
+        'accommodation_photo',
+        'created_at',
+        'updated_at',
     ];
 
-    // Визначаємо зв'язок з таблицею cart_meal_options
+
+    // Визначення зв'язку з таблицею cart_meal
     public function mealOptions()
     {
-        return $this->hasMany(CartMealOption::class);
+        return $this->belongsToMany(MealOption::class, 'cart_meal', 'cart_id', 'meal_option_id')
+            ->withPivot('guests_count');
     }
 
-    // Визначаємо зв'язок з користувачем
-    public function user()
+    // Відношення до Accommodation
+    public function accommodations()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(CartAccommodation::class);
     }
 
-    // Визначаємо зв'язок з помешканням
-    public function accommodation()
+    public function cartAccommodations()
     {
-        return $this->belongsTo(Accommodation::class);
+        return $this->hasMany(CartAccommodation::class, 'cart_id');
+    }
+    public function accommodationMealOptions()
+    {
+        return $this->belongsToMany(MealOption::class, 'cart_accommodation_meal_option', 'cart_accommodation_id', 'meal_option_id')
+            ->withPivot('guests_count');
     }
 }

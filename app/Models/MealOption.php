@@ -11,11 +11,10 @@ class MealOption extends Model
 
     protected $fillable = ['name', 'price'];
 
-    // MealOption.php
-public function accommodations()
-{
-    return $this->belongsToMany(Accommodation::class, 'accommodation_meal_option')
-                ->withPivot('price');
-}
-
+    // Відношення "багато до багатьох" з помешканнями
+    public function accommodations()
+    {
+        return $this->belongsToMany(Accommodation::class, 'accommodation_meal_option')
+                    ->withPivot('price'); // Додаємо price до відношення
+    }
 }
