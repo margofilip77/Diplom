@@ -45,4 +45,8 @@ class Cart extends Model
         return $this->belongsToMany(MealOption::class, 'cart_accommodation_meal_option', 'cart_accommodation_id', 'meal_option_id')
             ->withPivot('guests_count');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

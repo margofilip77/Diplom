@@ -28,7 +28,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -50,15 +50,15 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    // Обробка входу
-    public function login(Request $request)
+
+    protected function redirectTo()
     {
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::attempt($credentials)) {
-            return redirect()->intended('/home'); // Тут також можна вказати сторінку, на яку потрібно перенаправляти
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            return route('admin.dashboard');
+        } elseif ($user->role === 'provider') {
+            return route('provider.dashboard');
         }
-
-        return redirect()->back()->withErrors(['email' => 'Невірний логін або пароль.']);
+        return route('home'); // Для звичайних користувачів
     }
 }

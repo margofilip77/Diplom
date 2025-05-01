@@ -17,4 +17,8 @@ class MealOption extends Model
         return $this->belongsToMany(Accommodation::class, 'accommodation_meal_option')
                     ->withPivot('price'); // Додаємо price до відношення
     }
+    public function cartAccommodations()
+    {
+        return $this->hasMany(CartAccommodationMealOption::class);
+    }
 }

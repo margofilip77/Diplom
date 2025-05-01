@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Package;
+use App\Models\Accommodation;
+use App\Models\Service;
 
 class HomeController extends Controller
 {
-    
     /**
      * Create a new controller instance.
      *
@@ -15,7 +17,8 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        // Прибираємо middleware 'auth', щоб неавторизовані користувачі могли бачити головну сторінку
+        // Middleware 'auth' буде застосовуватися лише до маршрутів, які цього потребують
     }
 
     /**
@@ -25,16 +28,22 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Перевірка чи користувач авторизований
-        $user = Auth::user();
+        // Популярні помешкання (сортуємо за середнім рейтингом)
+        $popularAccommodations = Accommodation::select('id', 'name', 'description', 'price_per_night')
+            ->with(['reviews', 'photos']) // Завантажуємо відгуки та фото
+            ->get()
+            ->map(function ($accommodation) {
+                $accommodation->average_rating = $accommodation->reviews->avg('rating') ?? 0;
+                return $accommodation;
+            })
+            ->sortByDesc('average_rating')
+            ->take(6);
 
-        // Якщо користувач не авторизований, редиректимо на сторінку входу
-        if (!$user) {
-            return redirect()->route('login');
-        }
+        // Популярні послуги (просто перші 6)
+        $popularServices = Service::select('id', 'name', 'description', 'price', 'image')
+            ->take(6)
+            ->get();
 
-        // Передаємо змінну $user у шаблон
-        return view('home', compact('user'));
+        return view('home', compact('popularAccommodations', 'popularServices'));
     }
-
 }
