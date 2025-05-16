@@ -6,40 +6,38 @@
     {{-- Галерея фото --}}
     <div class="photo-gallery d-flex">
         @if($accommodation->photos->isNotEmpty())
-        @php
-        $mainPhoto = $accommodation->photos->first();
-        // Визначаємо, чи шлях згенерований Laravel Storage
-        $isStoragePath = Str::startsWith($mainPhoto->photo_path, ['accommodation_photos/', 'photos/']);
-        $mainPhotoUrl = $isStoragePath ? asset('storage/' . $mainPhoto->photo_path) : asset($mainPhoto->photo_path);
-        @endphp
-        <div class="main-photo-wrapper">
-            <a href="{{ $mainPhotoUrl }}" data-lightbox="gallery" data-title="Головне фото помешкання">
-                <img src="{{ $mainPhotoUrl }}"
-                    class="main-photo shadow-lg rounded"
-                    alt="Головне фото помешкання">
-            </a>
-        </div>
+            @php
+                $mainPhoto = $accommodation->photos->first();
+                $isStoragePath = Str::startsWith($mainPhoto->photo_path, ['accommodation_photos/', 'photos/']);
+                $mainPhotoUrl = $isStoragePath ? asset('storage/' . $mainPhoto->photo_path) : asset($mainPhoto->photo_path);
+            @endphp
+            <div class="main-photo-wrapper">
+                <a href="{{ $mainPhotoUrl }}" data-lightbox="gallery" data-title="Головне фото помешкання">
+                    <img src="{{ $mainPhotoUrl }}"
+                         class="main-photo shadow-lg rounded"
+                         alt="Головне фото помешкання">
+                </a>
+            </div>
         @endif
 
         <div class="side-photos d-flex flex-wrap ms-3">
             @foreach($accommodation->photos->skip(1)->take(4) as $key => $photo)
-            @php
-            // Визначаємо, чи шлях згенерований Laravel Storage
-            $isStoragePath = Str::startsWith($photo->photo_path, ['accommodation_photos/', 'photos/']);
-            $photoUrl = $isStoragePath ? asset('storage/' . $photo->photo_path) : asset($photo->photo_path);
-            @endphp
-            <div class="photo-wrapper position-relative">
-                <a href="{{ $photoUrl }}" data-lightbox="gallery" data-title="Фото {{ $key + 1 }}">
-                    <img src="{{ $photoUrl }}"
-                        class="side-photo shadow-sm rounded"
-                        alt="Фото помешкання">
-                </a>
-                @if($key == 3 && $accommodation->photos->count() > 5)
-                <button class="view-all-btn btn btn-outline-primary" onclick="openGalleryModal()">
-                    Переглянути всі фото
-                </button>
-                @endif
-            </div>
+                @php
+                    $isStoragePath = Str::startsWith($photo->photo_path, ['accommodation_photos/', 'photos/']);
+                    $photoUrl = $isStoragePath ? asset('storage/' . $photo->photo_path) : asset($photo->photo_path);
+                @endphp
+                <div class="photo-wrapper position-relative">
+                    <a href="{{ $photoUrl }}" data-lightbox="gallery" data-title="Фото {{ $key + 1 }}">
+                        <img src="{{ $photoUrl }}"
+                             class="side-photo shadow-sm rounded"
+                             alt="Фото помешкання">
+                    </a>
+                    @if($key == 3 && $accommodation->photos->count() > 5)
+                        <button class="view-all-btn btn btn-outline-primary" onclick="openGalleryModal()">
+                            Переглянути всі фото
+                        </button>
+                    @endif
+                </div>
             @endforeach
         </div>
     </div>
@@ -55,16 +53,15 @@
                 <div class="modal-body">
                     <div class="photo-grid">
                         @foreach($accommodation->photos as $photo)
-                        @php
-                        // Визначаємо, чи шлях згенерований Laravel Storage
-                        $isStoragePath = Str::startsWith($photo->photo_path, ['accommodation_photos/', 'photos/']);
-                        $photoUrl = $isStoragePath ? asset('storage/' . $photo->photo_path) : asset($photo->photo_path);
-                        @endphp
-                        <div class="photo-item">
-                            <a href="{{ $photoUrl }}" data-lightbox="gallery" data-title="Фото {{ $loop->iteration }}">
-                                <img src="{{ $photoUrl }}" class="rounded" alt="Фото помешкання">
-                            </a>
-                        </div>
+                            @php
+                                $isStoragePath = Str::startsWith($photo->photo_path, ['accommodation_photos/', 'photos/']);
+                                $photoUrl = $isStoragePath ? asset('storage/' . $photo->photo_path) : asset($photo->photo_path);
+                            @endphp
+                            <div class="photo-item">
+                                <a href="{{ $photoUrl }}" data-lightbox="gallery" data-title="Фото {{ $loop->iteration }}">
+                                    <img src="{{ $photoUrl }}" class="rounded" alt="Фото помешкання">
+                                </a>
+                            </div>
                         @endforeach
                     </div>
                 </div>
@@ -82,7 +79,7 @@
                 <span class="stars">
                     @for ($i = 1; $i <= 5; $i++)
                         <i class="fas fa-star {{ $i <= round($accommodation->averageRating()) ? 'text-warning' : 'text-muted' }}"></i>
-                        @endfor
+                    @endfor
                 </span>
                 <span class="reviews-count">({{ $accommodation->reviewsCount() }} відгуків)</span>
             </div>
@@ -99,46 +96,46 @@
                 </p>
             </div>
             @if ($accommodation->mealOptions->isNotEmpty())
-            <div class="mt-4">
-                <h4 class="meal-title">Доступні варіанти харчування:</h4>
-                <div class="meal-list">
-                    @foreach ($accommodation->mealOptions as $meal)
-                    <div class="meal-item">
-                        <span class="meal-name">{{ $meal->name }}</span>
-                        <span class="meal-price">
-                            @if(isset($meal->pivot->price))
-                            {{ $meal->pivot->price }} грн
-                            @else
-                            Ціна не вказана
-                            @endif
-                        </span>
+                <div class="mt-4">
+                    <h4 class="meal-title">Доступні варіанти харчування:</h4>
+                    <div class="meal-list">
+                        @foreach ($accommodation->mealOptions as $meal)
+                            <div class="meal-item">
+                                <span class="meal-name">{{ $meal->name }}</span>
+                                <span class="meal-price">
+                                    @if(isset($meal->pivot->price))
+                                        {{ $meal->pivot->price }} грн
+                                    @else
+                                        Ціна не вказана
+                                    @endif
+                                </span>
+                            </div>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
-            </div>
             @endif
 
             <div class="amenities-container">
                 @php
-                $groupedAmenities = $accommodation->amenities->groupBy('category.category_name');
+                    $groupedAmenities = $accommodation->amenities->groupBy('category.category_name');
                 @endphp
                 @foreach($groupedAmenities as $categoryName => $amenities)
-                <div class="amenities-column">
-                    <div class="category">
-                        @php
-                        $iconPath = public_path('icons/' . ($categoryName ?? 'default') . '.png');
-                        @endphp
-                        @if(file_exists($iconPath))
-                        <img src="{{ asset('icons/' . ($categoryName ?? 'default') . '.png') }}" alt="Іконка категорії" class="category-icon">
-                        @endif
-                        {{ $categoryName ?? 'Без категорії' }}
+                    <div class="amenities-column">
+                        <div class="category">
+                            @php
+                                $iconPath = public_path('icons/' . ($categoryName ?? 'default') . '.png');
+                            @endphp
+                            @if(file_exists($iconPath))
+                                <img src="{{ asset('icons/' . ($categoryName ?? 'default') . '.png') }}" alt="Іконка категорії" class="category-icon">
+                            @endif
+                            {{ $categoryName ?? 'Без категорії' }}
+                        </div>
+                        <ul class="amenities-list">
+                            @foreach($amenities as $amenity)
+                                <li>{{ $amenity->name }}</li>
+                            @endforeach
+                        </ul>
                     </div>
-                    <ul class="amenities-list">
-                        @foreach($amenities as $amenity)
-                        <li>{{ $amenity->name }}</li>
-                        @endforeach
-                    </ul>
-                </div>
                 @endforeach
             </div>
 
@@ -165,74 +162,63 @@
             <div class="reviews-section mt-4 p-4 rounded shadow-sm bg-light">
                 <h5 class="fw-bold text-primary">Відгуки</h5>
                 @if($accommodation->reviews->isNotEmpty())
-                <div class="reviews-list">
-                    @foreach($accommodation->reviews as $review)
-                    <div class="review-item mb-3 p-3 border rounded bg-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ $review->user->name }}</strong>
-                                <span class="text-muted ms-2">{{ $review->created_at->format('d.m.Y') }}</span>
+                    <div class="reviews-list">
+                        @foreach($accommodation->reviews as $review)
+                            <div class="review-item mb-3 p-3 border rounded bg-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ $review->user->name }}</strong>
+                                        <span class="text-muted ms-2">{{ $review->created_at->format('d.m.Y') }}</span>
+                                    </div>
+                                    <div class="review-rating">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="fas fa-star {{ $i <= $review->rating ? 'text-warning' : 'text-muted' }}"></i>
+                                        @endfor
+                                    </div>
+                                </div>
+                                <p class="mt-2">{{ $review->comment }}</p>
                             </div>
-                            <div class="review-rating">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <i class="fas fa-star {{ $i <= $review->rating ? 'text-warning' : 'text-muted' }}"></i>
-                                    @endfor
-                            </div>
-                        </div>
-                        <p class="mt-2">{{ $review->comment }}</p>
+                        @endforeach
                     </div>
-                    @endforeach
-                </div>
                 @else
-                <p class="text-muted">Поки що немає відгуків. Будьте першим, хто залишить відгук!</p>
+                    <p class="text-muted">Поки що немає відгуків. Будьте першим, хто залишить відгук!</p>
                 @endif
             </div>
 
-           <!-- Форма для додавання відгуку -->
-@auth
-<div class="add-review-section mt-4">
-    <h6 class="fw-bold">Залишити відгук</h6>
-    <form action="{{ route('reviews.store', ['accommodationId' => $accommodation->id]) }}" method="POST">
-        @csrf
-        <div class="mb-3">
-            <label for="rating" class="form-label">Ваш рейтинг:</label>
-            <select name="rating" id="rating" class="form-select w-auto" required>
-                @for ($i = 1; $i <= 5; $i++)
-                    <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'зірка' : 'зірок' }}</option>
-                @endfor
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="comment" class="form-label">Ваш відгук:</label>
-            <textarea name="comment" id="comment" class="form-control" rows="3" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Надіслати відгук</button>
-    </form>
-</div>
-@endauth
+            <!-- Форма для додавання відгуку -->
+            @auth
+                <div class="add-review-section mt-4">
+                    <h6 class="fw-bold">Залишити відгук</h6>
+                    <form action="{{ route('reviews.store', ['accommodationId' => $accommodation->id]) }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Ваш рейтинг:</label>
+                            <select name="rating" id="rating" class="form-select w-auto" required>
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'зірка' : 'зірок' }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Ваш відгук:</label>
+                            <textarea name="comment" id="comment" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Надіслати відгук</button>
+                    </form>
+                </div>
+            @endauth
         </div>
 
-        <!-- Секція з ціною та датами (з картою) -->
-        <div class="booking-section d-flex flex-column justify-content-start align-items-center p-4 rounded-3 shadow"
-            data-booked-dates="@json($accommodation->bookedDates->map(function($date) {
-                 return [
-                     'start' => $date->start_date->format('Y-m-d'),
-                     'end' => $date->end_date->format('Y-m-d')
-                 ];
-             }) ?? [])">
+        <div class="booking-section d-flex flex-column justify-content-start align-items-center p-4 rounded-3 shadow" data-booked-dates="{{ json_encode($bookedDates ?? []) }}">
             <p class="price text-dark fs-3">
                 <strong id="total-price">{{ $accommodation->price_per_night }} грн/ніч</strong>
             </p>
             <div class="booking-form w-100 d-flex flex-column align-items-center">
                 <div class="w-100 booking-details">
                     <div class="d-flex justify-content-between">
-                        <div class="d-flex flex-column w-38">
-                            <label for="checkin" class="form-label fw-bold nl">Прибуття</label>
-                            <input type="text" id="checkin" class="form-control rounded" placeholder="Виберіть дату" required />
-                        </div>
-                        <div class="d-flex flex-column w-48">
-                            <label for="checkout" class="form-label fw-bold">Виїзд</label>
-                            <input type="text" id="checkout" class="form-control rounded" placeholder="Виберіть дату" required />
+                        <div class="d-flex flex-column w-100">
+                            <label for="date-range" class="form-label fw-bold">Дата прибуття та виїзду</label>
+                            <input type="text" id="date-range" class="form-control rounded" placeholder="Виберіть діапазон дат" readonly required />
                         </div>
                     </div>
 
@@ -245,82 +231,66 @@
                         </div>
                         <div class="guest-selection bg-white p-3 rounded border position-absolute w-100 shadow" id="guest-dropdown" style="display: none;">
                             @foreach(['adults' => 'Дорослі', 'children' => 'Діти', 'infants' => 'Немовлята', 'pets' => 'Тварини'] as $type => $label)
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <span>{{ $label }}</span>
-                                <div class="d-flex align-items-center">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeGuestCount('{{ $type }}', -1)">-</button>
-                                    <span id="{{ $type }}-count" class="mx-2">{{ $type == 'adults' ? 1 : 0 }}</span>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeGuestCount('{{ $type }}', 1)">+</button>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span>{{ $label }}</span>
+                                    <div class="d-flex align-items-center">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeGuestCount('{{ $type }}', -1)">-</button>
+                                        <span id="{{ $type }}-count" class="mx-2">{{ $type == 'adults' ? 1 : 0 }}</span>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeGuestCount('{{ $type }}', 1)">+</button>
+                                    </div>
                                 </div>
-                            </div>
                             @endforeach
                         </div>
                     </div>
 
                     <!-- Харчування -->
                     @if ($accommodation->mealOptions->isNotEmpty())
-                    <div class="mt-3">
-                        <label class="form-label fw-bold">Харчування</label>
-                        <div id="meal_option">
-                            @foreach ($accommodation->mealOptions as $meal)
-                            <div class="form-group mb-2">
-                                <label for="meal_option_{{ $meal->id }}">
-                                    {{ $meal->name }}
-                                    @if(isset($meal->pivot->price))
-                                    (+{{ $meal->pivot->price }} грн за гостя)
-                                    @else
-                                    (Ціна не вказана)
-                                    @endif
-                                </label>
-                                <select class="form-control meal-select" id="meal_option_{{ $meal->id }}" name="meal_option[{{ $meal->id }}]" data-price="{{ $meal->pivot->price ?? 0 }}" onchange="updateTotalPrice()">
-                                    <option value="0">Не вибрано</option>
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'гість' : ($i < 5 ? 'гостя' : 'гостей') }}</option>
-                                        @endfor
-                                </select>
+                        <div class="mt-3">
+                            <label class="form-label fw-bold">Харчування</label>
+                            <div id="meal_option">
+                                @foreach ($accommodation->mealOptions as $meal)
+                                    <div class="form-group mb-2">
+                                        <label for="meal_option_{{ $meal->id }}">
+                                            {{ $meal->name }}
+                                            @if(isset($meal->pivot->price))
+                                                (+{{ $meal->pivot->price }} грн за гостя)
+                                            @else
+                                                (Ціна не вказана)
+                                            @endif
+                                        </label>
+                                        <select class="form-control meal-select" id="meal_option_{{ $meal->id }}" name="meal_option[{{ $meal->id }}]" data-price="{{ $meal->pivot->price ?? 0 }}" onchange="updateTotalPrice()">
+                                            <option value="0">Не вибрано</option>
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <option value="{{ $i }}">{{ $i }} {{ $i == 1 ? 'гість' : ($i < 5 ? 'гостя' : 'гостей') }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                @endforeach
                             </div>
-                            @endforeach
                         </div>
-                    </div>
-                    @endif
-
-                    <!-- Відображення зайнятих дат -->
-                    @if($accommodation->bookedDates->isNotEmpty())
-                    <div class="mt-3">
-                        <label class="form-label fw-bold">Зайняті дати:</label>
-                        <ul class="booked-dates-list">
-                            @foreach($accommodation->bookedDates->sortBy('start_date') as $bookedDate)
-                            <li>{{ $bookedDate->start_date->format('d.m.Y') }} - {{ $bookedDate->end_date->format('d.m.Y') }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @else
-                    <div class="mt-3">
-                        <p class="text-muted">Наразі немає зайнятих дат.</p>
-                    </div>
                     @endif
 
                     <!-- Карта через Leaflet -->
                     <div id="map" style="height: 200px; width: 100%; margin-top: 20px;"
-                        data-lat="{{ $accommodation->latitude ?? 50.4501 }}"
-                        data-lng="{{ $accommodation->longitude ?? 30.5234 }}"
-                        data-name="{{ $accommodation->name }}"
-                        data-location="{{ $accommodation->settlement }}, {{ $accommodation->region }}">
+                         data-lat="{{ $accommodation->latitude ?? 50.4501 }}"
+                         data-lng="{{ $accommodation->longitude ?? 30.5234 }}"
+                         data-name="{{ $accommodation->name }}"
+                         data-location="{{ $accommodation->settlement }}, {{ $accommodation->region }}">
                     </div>
                     <!-- Посилання для перегляду розташування -->
                     <div class="mt-2 text-center">
                         <a href="https://www.google.com/maps?q={{ $accommodation->latitude ?? 50.4501 }},{{ $accommodation->longitude ?? 30.5234 }}"
-                            target="_blank"
-                            class="text-primary text-decoration-none">
+                           target="_blank"
+                           class="text-primary text-decoration-none">
                             Переглянути розташування
                         </a>
                     </div>
 
                     <button class="btn btn-success w-75 mt-3 rounded-3 add-to-cart-btn"
-                        data-id="{{ $accommodation->id }}"
-                        data-price="{{ $accommodation->price_per_night }}"
-                        data-photo="{{ $mainPhoto->photo_path ?? '' }}"
-                        data-total="">
+                            data-id="{{ $accommodation->id }}"
+                            data-price="{{ $accommodation->price_per_night }}"
+                            data-photo="{{ $mainPhoto->photo_path ?? '' }}"
+                            data-total="">
                         Додати в кошик
                     </button>
                 </div>
@@ -349,16 +319,105 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-    <!-- Підключення Leaflet через CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Підключення Flatpickr через CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/uk.js"></script>
 
-    <!-- Ініціалізація карти -->
+    <!-- Ініціалізація скриптів -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+   document.addEventListener("DOMContentLoaded", function() {
+            // Перевірка Flatpickr
+            if (typeof flatpickr === "undefined") {
+                console.error("Flatpickr не завантажився. Перевірте підключення бібліотеки.");
+                return;
+            }
+
+            const dateRangeInput = document.getElementById("date-range");
+            if (!dateRangeInput) {
+                console.error("Елемент з ID 'date-range' не знайдено в DOM.");
+                return;
+            }
+
+            const bookingSection = document.querySelector('.booking-section');
+            if (!bookingSection) {
+                console.error("Елемент з класом 'booking-section' не знайдено.");
+                return;
+            }
+
+            let bookedDatesData;
+            try {
+                bookedDatesData = JSON.parse(bookingSection.dataset.bookedDates);
+                console.log("Заброньовані дати (raw):", bookingSection.dataset.bookedDates);
+                console.log("Заброньовані дати (parsed):", bookedDatesData);
+            } catch (error) {
+                console.error("Помилка при парсингу bookedDatesData:", error);
+                bookedDatesData = [];
+            }
+
+            const disabledRanges = bookedDatesData.map(period => ({
+                from: period.start,
+                to: period.end
+            }));
+            console.log("Disabled ranges:", disabledRanges);
+
+            const bookedDatesFormatted = bookedDatesData.map(period => {
+                const start = new Date(period.start).toLocaleDateString('uk-UA');
+                const end = new Date(period.end).toLocaleDateString('uk-UA');
+                return { from: period.start, to: period.end, range: `${start} - ${end}` };
+            });
+            console.log("Formatted booked dates:", bookedDatesFormatted);
+
+            try {
+                const datePicker = flatpickr("#date-range", {
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    maxDate: new Date().setFullYear(new Date().getFullYear() + 1),
+                    disable: disabledRanges,
+                    locale: "uk",
+                    onChange: function(selectedDates) {
+                        console.log("Вибрані дати:", selectedDates);
+                        if (selectedDates.length === 2) {
+                            updateTotalPrice();
+                        }
+                    },
+                    onDayCreate: function(dObj, dStr, fp, dayElem) {
+                        const date = dayElem.dateObj;
+                        const formattedDate = date.toISOString().split('T')[0];
+                        console.log("Перевіряю дату:", formattedDate);
+
+                        // Перевіряємо, чи дата входить у заброньований період (включно з кінцевою датою)
+                        const isBooked = bookedDatesData.some(period => {
+                            const start = new Date(period.start);
+                            const end = new Date(period.end);
+                            return date >= start && date <= end;
+                        });
+
+                        if (isBooked) {
+                            console.log("Знайдено заброньовану дату:", formattedDate);
+                            dayElem.classList.add('booked-day');
+                            dayElem.innerHTML += '<span class="booked-cross">✗</span>';
+                            dayElem.setAttribute('title', `Зайнято: ${bookedDatesFormatted.find(p => new Date(p.from).toISOString().split('T')[0] === formattedDate || new Date(p.to).toISOString().split('T')[0] === formattedDate)?.range || 'невідомий період'}`);
+                        } else {
+                            // Якщо дата не заброньована, прибираємо клас booked-day
+                            dayElem.classList.remove('booked-day');
+                            dayElem.querySelector('.booked-cross')?.remove();
+                            dayElem.removeAttribute('title');
+                        }
+                    },
+                    monthSelector: true,
+                    prevArrow: "<span class='flatpickr-prev-month'>«</span>",
+                    nextArrow: "<span class='flatpickr-next-month'>»</span>"
+                });
+
+                console.log("Flatpickr ініціалізовано:", datePicker);
+            } catch (error) {
+                console.error("Помилка ініціалізації Flatpickr:", error);
+            }
+
+            // Ініціалізація карти (залишається без змін)
             const mapEl = document.getElementById("map");
             if (mapEl) {
                 const lat = parseFloat(mapEl.dataset.lat);
@@ -367,81 +426,19 @@
                 const location = mapEl.dataset.location;
 
                 const map = L.map('map').setView([lat, lng], 13);
-
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
-
                 L.marker([lat, lng]).addTo(map)
                     .bindPopup(`${name}<br>${location}`)
                     .openPopup();
             }
 
-            // Тимчасово закодовані дати для тестування
-            const bookedDates = [{
-                    start: "2025-11-08",
-                    end: "2025-11-11"
-                },
-                {
-                    start: "2025-12-22",
-                    end: "2025-12-28"
-                },
-                {
-                    start: "2025-06-03",
-                    end: "2025-06-10"
-                },
-                {
-                    start: "2025-09-16",
-                    end: "2025-09-22"
-                },
-                {
-                    start: "2025-11-15",
-                    end: "2025-11-21"
-                }
-            ];
-
-            // Функція для створення масиву всіх зайнятих дат
-            function getDisabledDates(bookedDates) {
-                let disabledDates = [];
-                bookedDates.forEach(period => {
-                    let start = new Date(period.start);
-                    let end = new Date(period.end);
-                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                        disabledDates.push(new Date(d).toISOString().split('T')[0]);
-                    }
-                });
-                return disabledDates;
-            }
-
-            const disabledDates = getDisabledDates(bookedDates);
-
-            // Ініціалізація Flatpickr з урахуванням зайнятих дат
-            const checkinPicker = flatpickr("#checkin", {
-                dateFormat: "Y-m-d",
-                minDate: "today",
-                disable: disabledDates,
-                onChange: function(selectedDates, dateStr) {
-                    checkoutPicker.set('minDate', dateStr);
-                    updateTotalPrice();
-                }
-            });
-
-            const checkoutPicker = flatpickr("#checkout", {
-                dateFormat: "Y-m-d",
-                minDate: "today",
-                disable: disabledDates,
-                onChange: function(selectedDates, dateStr) {
-                    checkinPicker.set('maxDate', dateStr);
-                    updateTotalPrice();
-                }
-            });
-
-            // Логіка для гостей
+            // Логіка для гостей (залишається без змін)
             let dropdownOpen = false;
-
             window.toggleGuestDropdown = function() {
-                let dropdown = document.getElementById("guest-dropdown");
-                let arrow = document.getElementById("dropdown-arrow");
+                const dropdown = document.getElementById("guest-dropdown");
+                const arrow = document.getElementById("dropdown-arrow");
                 dropdownOpen = !dropdownOpen;
                 dropdown.style.display = dropdownOpen ? "block" : "none";
                 arrow.classList.toggle("open", dropdownOpen);
@@ -449,7 +446,7 @@
             };
 
             window.changeGuestCount = function(type, change) {
-                let countElement = document.getElementById(`${type}-count`);
+                const countElement = document.getElementById(`${type}-count`);
                 let currentCount = parseInt(countElement.textContent);
                 if (currentCount + change >= 0) {
                     countElement.textContent = currentCount + change;
@@ -457,11 +454,11 @@
             };
 
             function updateGuestSummary() {
-                let adults = parseInt(document.getElementById("adults-count").textContent);
-                let children = parseInt(document.getElementById("children-count").textContent);
-                let infants = parseInt(document.getElementById("infants-count").textContent);
-                let pets = parseInt(document.getElementById("pets-count").textContent);
-                let summary = [];
+                const adults = parseInt(document.getElementById("adults-count").textContent);
+                const children = parseInt(document.getElementById("children-count").textContent);
+                const infants = parseInt(document.getElementById("infants-count").textContent);
+                const pets = parseInt(document.getElementById("pets-count").textContent);
+                const summary = [];
                 if (adults > 0) summary.push(`${adults} доросл${adults > 1 ? 'і' : 'ий'}`);
                 if (children > 0) summary.push(`${children} ${children > 1 ? 'дітей' : 'дитина'}`);
                 if (infants > 0) summary.push(`${infants} немовля${infants > 1 ? 'т' : ''}`);
@@ -469,28 +466,26 @@
                 document.getElementById("guest-summary").textContent = summary.length > 0 ? summary.join(", ") : "1 дорослий";
             }
 
-            // Оновлення ціни
-            let basePrice = parseFloat(document.getElementById("total-price").textContent.replace(" грн/ніч", ""));
-
+            // Оновлення ціни (залишається без змін)
+            const basePrice = parseFloat(document.getElementById("total-price").textContent.replace(" грн/ніч", ""));
             function calculateNights() {
-                let checkinDate = document.getElementById("checkin").value;
-                let checkoutDate = document.getElementById("checkout").value;
-                if (checkinDate && checkoutDate) {
-                    let checkin = new Date(checkinDate);
-                    let checkout = new Date(checkoutDate);
-                    let timeDifference = checkout - checkin;
-                    let nights = timeDifference / (1000 * 3600 * 24);
+                const dateRange = document.getElementById("date-range").value.split(" to ");
+                if (dateRange.length === 2) {
+                    const checkin = new Date(dateRange[0]);
+                    const checkout = new Date(dateRange[1]);
+                    const timeDifference = checkout - checkin;
+                    const nights = timeDifference / (1000 * 3600 * 24);
                     return nights > 0 ? nights : 0;
                 }
                 return 0;
             }
 
             window.updateTotalPrice = function() {
-                let nights = calculateNights();
+                const nights = calculateNights();
                 let totalPrice = basePrice * (nights > 0 ? nights : 1);
                 document.querySelectorAll(".meal-select").forEach(select => {
-                    let selected = parseInt(select.value);
-                    let mealPrice = parseFloat(select.getAttribute("data-price")) || 0;
+                    const selected = parseInt(select.value);
+                    const mealPrice = parseFloat(select.getAttribute("data-price")) || 0;
                     if (selected > 0) {
                         totalPrice += selected * mealPrice;
                     }
@@ -502,124 +497,148 @@
                 }
             };
 
-            // Додавання слухачів для оновлення ціни
-            document.getElementById("checkin").addEventListener("change", updateTotalPrice);
-            document.getElementById("checkout").addEventListener("change", updateTotalPrice);
+            document.getElementById("date-range").addEventListener("change", updateTotalPrice);
             document.querySelectorAll(".meal-select").forEach(select => {
                 select.addEventListener("change", updateTotalPrice);
             });
 
-            // Додавання в кошик
-            const addToCartBtn = document.querySelector(".add-to-cart-btn");
-            if (addToCartBtn) {
-                addToCartBtn.addEventListener("click", function() {
-                    let checkinDate = document.getElementById("checkin").value;
-                    let checkoutDate = document.getElementById("checkout").value;
+    // Логіка додавання в кошик
+    const addToCartBtn = document.querySelector(".add-to-cart-btn");
+    let isAdding = false;
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener("click", async function(event) {
+    event.preventDefault();
+    if (isAdding) {
+        showToast('Запит уже виконується', 'warning');
+        return;
+    }
 
-                    // Перевірка, чи вибрані дати
-                    if (!checkinDate || !checkoutDate) {
-                        showToast('Будь ласка, виберіть дати заїзду та виїзду', 'error');
-                        return;
-                    }
+    isAdding = true;
+    addToCartBtn.disabled = true;
+    addToCartBtn.textContent = 'Додаємо...';
 
-                    // Перевірка, чи вибрані дати перетинаються із зайнятими
-                    let selectedStart = new Date(checkinDate);
-                    let selectedEnd = new Date(checkoutDate);
-                    let overlap = bookedDates.some(period => {
-                        let bookedStart = new Date(period.start);
-                        let bookedEnd = new Date(period.end);
-                        return (selectedStart <= bookedEnd && selectedEnd >= bookedStart);
-                    });
+    const dateRange = document.getElementById("date-range").value.split(" to ");
+    if (dateRange.length !== 2) {
+        showToast('Виберіть діапазон дат заїзду та виїзду', 'error');
+        isAdding = false;
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Додати до кошика';
+        return;
+    }
 
-                    if (overlap) {
-                        showToast('Вибрані дати перетинаються із зайнятими. Виберіть інші дати.', 'error');
-                        return;
-                    }
+    // Нормалізація дат у формат YYYY-MM-DD
+    const checkinDate = new Date(dateRange[0]).toISOString().split('T')[0];
+    const checkoutDate = new Date(dateRange[1]).toISOString().split('T')[0];
 
-                    let cartData = {
-                        accommodation_id: this.getAttribute("data-id"),
-                        price: this.getAttribute("data-price"),
-                        photo: this.getAttribute("data-photo"),
-                        total_price: this.getAttribute("data-total"),
-                        checkin_date: checkinDate,
-                        checkout_date: checkoutDate,
-                        guests_count: {
-                            adults: parseInt(document.getElementById("adults-count").textContent),
-                            children: parseInt(document.getElementById("children-count").textContent),
-                            infants: parseInt(document.getElementById("infants-count").textContent),
-                            pets: parseInt(document.getElementById("pets-count").textContent)
-                        },
-                        meal_options: []
-                    };
-                    document.querySelectorAll(".meal-select").forEach(select => {
-                        let selectedOption = parseInt(select.value);
-                        if (selectedOption > 0) {
-                            let mealId = select.id.split('_').pop();
-                            cartData.meal_options.push({
-                                meal_option_id: mealId,
-                                guests_count: selectedOption
-                            });
-                        }
-                    });
+    const cartData = {
+        accommodation_id: this.getAttribute("data-id"),
+        price: this.getAttribute("data-price"),
+        photo: this.getAttribute("data-photo"),
+        total_price: this.getAttribute("data-total"),
+        checkin_date: checkinDate,
+        checkout_date: checkoutDate,
+        guests_count: {
+            adults: parseInt(document.getElementById("adults-count").textContent),
+            children: parseInt(document.getElementById("children-count").textContent),
+            infants: parseInt(document.getElementById("infants-count").textContent),
+            pets: parseInt(document.getElementById("pets-count").textContent)
+        },
+        meal_options: []
+    };
 
-                    fetch('/cart/add', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            },
-                            body: JSON.stringify(cartData)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showToast('Товар успішно додано до кошика!', 'success');
-                                const cartBadge = document.querySelector('.cart .badge');
-                                if (cartBadge) {
-                                    cartBadge.textContent = data.cart_items_count;
-                                }
-                            } else {
-                                showToast('Помилка при додаванні до кошика', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Помилка:', error);
-                            showToast('Сталася помилка', 'error');
-                        });
-                });
-            }
-
-            // Ініціалізація Swiper
-            var swiper = new Swiper(".mySwiper", {
-                navigation: {
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev",
-                },
-                loop: true,
-                keyboard: true,
+    document.querySelectorAll(".meal-select").forEach(select => {
+        const selectedOption = parseInt(select.value);
+        if (selectedOption > 0) {
+            const mealId = select.id.split('_').pop();
+            cartData.meal_options.push({
+                meal_option_id: mealId,
+                guests_count: selectedOption
             });
+        }
+    });
 
-            window.openGalleryModal = function() {
-                var galleryModal = new bootstrap.Modal(document.getElementById('galleryModal'));
-                galleryModal.show();
-            };
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '{}');
+    const uniqueKey = `${cartData.accommodation_id}-${checkinDate}-${checkoutDate}-${JSON.stringify(cartData.guests_count)}-${JSON.stringify(cartData.meal_options)}`;
+    if (existingCart[uniqueKey]) {
+        showToast('Це помешкання вже є у вашому кошику', 'warning');
+        isAdding = false;
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Додати до кошика';
+        return;
+    }
+
+            try {
+                const response = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(cartData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    existingCart[uniqueKey] = cartData;
+                    localStorage.setItem('cart', JSON.stringify(existingCart));
+                    showToast('Товар додано до кошика!', 'success');
+                    const cartBadge = document.querySelector('.cart .badge');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_items_count;
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/cart';
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'Помилка при додаванні', 'error');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showToast('Сталася помилка', 'error');
+            } finally {
+                isAdding = false;
+                addToCartBtn.disabled = false;
+                addToCartBtn.textContent = 'Додати до кошика';
+            }
         });
+    }
 
-        function showToast(message, type = 'success') {
-            const toastContainer = document.createElement('div');
-            toastContainer.id = 'toast-container';
-            toastContainer.style = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
-            document.body.appendChild(toastContainer);
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${type}`;
-            toast.innerHTML = `<span>${message}</span>`;
-            toastContainer.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
+    // Ініціалізація Swiper
+    const swiper = new Swiper(".mySwiper", {
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+        loop: true,
+        keyboard: true,
+    });
+
+    window.openGalleryModal = function() {
+        const galleryModal = new bootstrap.Modal(document.getElementById('galleryModal'));
+        galleryModal.show();
+    };
+});
+
+function showToast(message, type = 'success') {
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style = 'position: fixed; top: 20px; right: 20px; z-index: 1000;';
+    document.body.appendChild(toastContainer);
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
     </script>
 
     <style>
@@ -694,26 +713,6 @@
             color: #555;
         }
 
-        .amenities-section {
-            margin-top: 10px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .amenity-item {
-            background: white;
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .amenity-item i {
-            font-size: 18px;
-        }
-
         .guest-dropdown-toggle {
             background: #fff;
             cursor: pointer;
@@ -723,36 +722,6 @@
         .guest-selection {
             display: none;
             font-size: 14px;
-        }
-
-        .guest-option {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-        }
-
-        .counter {
-            display: flex;
-            align-items: center;
-        }
-
-        .counter button {
-            width: 24px;
-            height: 24px;
-            font-size: 14px;
-        }
-
-        .count {
-            min-width: 24px;
-            text-align: center;
-        }
-
-        .meal-selection {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            margin-bottom: 6px;
         }
 
         .arrow {
@@ -869,7 +838,6 @@
         .form-select,
         .form-control {
             width: 100%;
-            max-width: 250px;
         }
 
         .btn-success {
@@ -886,14 +854,6 @@
         .detailed-description {
             overflow: hidden;
             transition: max-height 0.3s ease-out;
-        }
-
-        .detailed-description.expanded {
-            max-height: none;
-        }
-
-        .description-section h4 {
-            margin-bottom: 10px;
         }
 
         .meal-title {
@@ -948,25 +908,46 @@
             transform: translateX(0);
         }
 
-        .booked-dates-list {
-            list-style: none;
-            padding: 0;
-            font-size: 14px;
-            color: #dc3545;
+        .form-control[readonly] {
+            background-color: #fff !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
         }
 
-        .booked-dates-list li {
-            margin-bottom: 5px;
-        }
-
-        .flatpickr-day.disabled {
+        .flatpickr-day.booked-day {
             background-color: #ffcccc !important;
             color: #666 !important;
             cursor: not-allowed !important;
+            position: relative;
         }
 
-        .flatpickr-day.disabled:hover {
+        .flatpickr-day.booked-day .booked-cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px; /* Збільшено розмір */
+    color: #dc3545;
+    font-weight: bold; /* Додано жирність для видимості */
+}
+
+        .flatpickr-day.booked-day:hover {
             background-color: #ff9999 !important;
+        }
+
+        .flatpickr-day.booked-day[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .reviews-section {
@@ -1007,25 +988,4 @@
             resize: none;
         }
     </style>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.querySelectorAll(".expand-description").forEach(button => {
-                button.addEventListener("click", function() {
-                    let description = this.closest(".detailed-description");
-                    let moreText = description.querySelector(".more-text");
-                    if (description.dataset.expanded === "false") {
-                        moreText.style.display = "inline";
-                        this.textContent = "Згорнути";
-                        description.dataset.expanded = "true";
-                    } else {
-                        moreText.style.display = "none";
-                        this.textContent = "Читати більше";
-                        description.dataset.expanded = "false";
-                    }
-                });
-            });
-        });
-    </script>
-
-    @endsection
+@endsection

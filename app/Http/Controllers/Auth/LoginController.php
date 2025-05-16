@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Models\Booking;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -49,7 +52,49 @@ class LoginController extends Controller
 
         return view('auth.login');
     }
+    protected function authenticated(Request $request, $user)
+    {
+        // Прив’язка бронювань за email
+        $guestEmail = Session::get('guest_email');
+        $bookingIds = Session::get('booking_ids', []);
 
+        if ($guestEmail && $guestEmail === $user->email) {
+            $bookings = Booking::where('email', $user->email)
+                ->whereIn('id', $bookingIds)
+                ->whereNull('user_id')
+                ->get();
+
+            if ($bookings->isNotEmpty()) {
+                foreach ($bookings as $booking) {
+                    $booking->update([
+                        'user_id' => $user->id,
+                        'token' => null,
+                    ]);
+                    Log::info('Booking attached to user after login', [
+                        'user_id' => $user->id,
+                        'booking_id' => $booking->id,
+                        'email' => $user->email,
+                    ]);
+                }
+            } else {
+                Log::info('No bookings found for email after login', [
+                    'email' => $user->email,
+                    'booking_ids' => $bookingIds,
+                ]);
+            }
+
+            // Очищаємо сесію після прив’язки
+            Session::forget('guest_email');
+            Session::forget('booking_ids');
+        } else {
+            Log::warning('Guest email does not match or is not set', [
+                'guest_email' => $guestEmail,
+                'user_email' => $user->email,
+            ]);
+        }
+
+        return redirect()->intended($this->redirectTo());
+    }
 
     protected function redirectTo()
     {

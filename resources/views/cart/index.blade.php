@@ -87,36 +87,48 @@
 
                 @if($accommodation->availableServices->isNotEmpty())
                 <div class="row services-container" id="services-{{ $itemId }}">
-                    @foreach($accommodation->availableServices as $categoryId => $services)
-                    @foreach($services as $service)
-                    <div class="col-md-4 mb-3 service-item" data-category="{{ $service->category_id }}">
-                        <div class="card h-100" style="border-radius: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); transition: transform 0.2s;">
-                            <img src="{{ asset('services/' . $service->image) }}" class="card-img-top" alt="{{ $service->name }}" style="height: 150px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px;">
-                            <div class="card-body p-3">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input service-checkbox"
-                                        id="service_{{ $service->id }}_{{ $itemId }}"
-                                        data-service-id="{{ $service->id }}"
-                                        data-price="{{ $service->price }}"
-                                        onchange="updateCartTotal('{{ $itemId }}')">
-                                    <label class="form-check-label" for="service_{{ $service->id }}_{{ $itemId }}">
-                                        <span style="font-weight: 600; color: #1A1A1A;">{{ $service->name }} ({{ $service->price }} грн)</span>
-                                    </label>
-                                </div>
-                                <p class="text-muted mt-2" style="font-size: 0.85rem;">{{ Str::limit($service->description, 100) }}</p>
-                                <button class="btn btn-sm view-more-btn" style="background: #1A73E8; color: #FFFFFF;"
-                                    data-service-id="{{ $service->id }}"
-                                    data-name="{{ addslashes($service->name) }}"
-                                    data-description="{{ addslashes($service->description) }}"
-                                    data-price="{{ $service->price }}"
-                                    data-image="{{ asset('services/' . $service->image) }}"
-                                    onclick="showServiceModal(this)">Переглянути більше</button>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                    @endforeach
+    @foreach($accommodation->availableServices as $categoryId => $services)
+    @foreach($services as $service)
+    <div class="col-md-4 mb-3 service-item" data-category="{{ $service->category_id }}">
+        <div class="card h-100" style="border-radius: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); transition: transform 0.2s;">
+            <img src="{{ asset('services/' . $service->image) }}" class="card-img-top" alt="{{ $service->name }}" style="height: 150px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <div class="card-body p-3">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input service-checkbox"
+                        id="service_{{ $service->id }}_{{ $itemId }}"
+                        data-service-id="{{ $service->id }}"
+                        data-price="{{ $service->price }}"
+                        data-latitude="{{ $service->latitude ?? $accommodation->accommodation->latitude ?? 50.4501 }}"
+                        data-longitude="{{ $service->longitude ?? $accommodation->accommodation->longitude ?? 30.5234 }}"
+                        onchange="updateCartTotal('{{ $itemId }}')">
+                    <label class="form-check-label" for="service_{{ $service->id }}_{{ $itemId }}">
+                        <span style="font-weight: 600; color: #1A1A1A;">{{ $service->name }} ({{ $service->price }} грн)</span>
+                    </label>
                 </div>
+                <p class="text-muted mt-2" style="font-size: 0.85rem;">{{ Str::limit($service->description, 100) }}</p>
+                @if($service->distance !== null)
+                <p class="text-muted" style="font-size: 0.85rem;">
+                    <i class="fas fa-map-marker-alt me-1" style="color: #FF6200;"></i>
+                    Відстань: {{ $service->distance }} км
+                </p>
+                @else
+                <p class="text-muted" style="font-size: 0.85rem;">Відстань недоступна</p>
+                @endif
+                <button class="btn btn-sm view-more-btn" style="background: #1A73E8; color: #FFFFFF;"
+                    data-service-id="{{ $service->id }}"
+                    data-name="{{ addslashes($service->name) }}"
+                    data-description="{{ addslashes($service->description) }}"
+                    data-price="{{ $service->price }}"
+                    data-image="{{ asset('services/' . $service->image) }}"
+                    data-latitude="{{ $service->latitude ?? $accommodation->accommodation->latitude ?? 50.4501 }}"
+                    data-longitude="{{ $service->longitude ?? $accommodation->accommodation->longitude ?? 30.5234 }}"
+                    onclick="showServiceModal(this)">Переглянути більше</button>
+            </div>
+        </div>
+    </div>
+    @endforeach
+    @endforeach
+</div>
                 @else
                 <p class="text-muted">Немає доступних послуг для цього регіону.</p>
                 @endif
@@ -190,7 +202,10 @@
         @endforeach
 
         <div class="text-end mt-4">
-            <a href="{{ route('checkout.index') }}" class="btn" style="background: #28a745; color: #FFFFFF; border-radius: 25px; padding: 10px 20px;" onclick="saveCartData()">Оформити замовлення</a>
+            <form id="checkoutForm" action="{{ route('cart.checkout') }}" method="GET" style="display: inline;">
+                <input type="hidden" id="cartData" name="cartData">
+                <button type="submit" class="btn" style="background: #28a745; color: #FFFFFF; border-radius: 25px; padding: 10px 20px;" onclick="saveCartData(event)">Оформити замовлення</button>
+            </form>
         </div>
         @endif
     </div>
@@ -208,6 +223,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <img id="modal-service-image" src="" alt="Service Image" class="img-fluid rounded" style="max-height: 300px; object-fit: cover;">
+                        <div id="service-map" style="height: 200px; width: 100%; margin-top: 10px;"></div>
                     </div>
                     <div class="col-md-6">
                         <h3 id="modal-service-name" class="mb-3"></h3>
@@ -252,97 +268,108 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    let currentMap = null; // Змінна для зберігання поточної карти
+
     // Update cart total
     function updateCartTotal(accommodationId) {
-    const itemElement = document.querySelector(`.cart-item[data-id="${accommodationId}"]`);
-    if (!itemElement) return;
+        const itemElement = document.querySelector(`.cart-item[data-id="${accommodationId}"]`);
+        if (!itemElement) return;
 
-    const priceElement = itemElement.querySelector('.item-price');
-    const serviceTotalElement = itemElement.querySelector('.service-total');
-    const serviceTotalAmountElement = itemElement.querySelector('.service-total-amount');
-    const packageTotalElement = itemElement.querySelector('.package-total');
-    const packageTotalAmountElement = itemElement.querySelector('.package-total-amount');
+        const priceElement = itemElement.querySelector('.item-price');
+        const serviceTotalElement = itemElement.querySelector('.service-total');
+        const serviceTotalAmountElement = itemElement.querySelector('.service-total-amount');
+        const packageTotalElement = itemElement.querySelector('.package-total');
+        const packageTotalAmountElement = itemElement.querySelector('.package-total-amount');
 
-    const basePrice = parseFloat(priceElement.getAttribute('data-base-price')) || 0;
-    let serviceTotal = 0;
-    let packageTotal = 0;
-    let selectedServices = [];
-    let selectedPackages = [];
+        const basePrice = parseFloat(priceElement.getAttribute('data-base-price')) || 0;
+        let serviceTotal = 0;
+        let packageTotal = 0;
+        let selectedServices = [];
+        let selectedPackages = [];
 
-    // Збір обраних послуг
-    const checkedServices = itemElement.querySelectorAll('.service-checkbox:checked');
-    checkedServices.forEach(checkbox => {
-        const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-        const serviceId = checkbox.getAttribute('data-service-id');
-        const label = checkbox.nextElementSibling.querySelector('span').textContent;
-        serviceTotal += price;
-        selectedServices.push({
-            id: serviceId,
-            name: label.split('(')[0].trim(),
-            price: price
+        // Збір обраних послуг
+        const checkedServices = itemElement.querySelectorAll('.service-checkbox:checked');
+        checkedServices.forEach(checkbox => {
+            const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
+            const serviceId = checkbox.getAttribute('data-service-id');
+            const label = checkbox.nextElementSibling.querySelector('span').textContent;
+            serviceTotal += price;
+            selectedServices.push({
+                id: serviceId,
+                name: label.split('(')[0].trim(),
+                price: price
+            });
         });
-    });
 
-    // Збір обраних пакетів
-    const checkedPackages = itemElement.querySelectorAll('.package-checkbox:checked');
-    checkedPackages.forEach(checkbox => {
-        const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
-        const packageId = checkbox.getAttribute('data-package-id');
-        const label = checkbox.nextElementSibling.querySelector('span').textContent;
-        packageTotal += price;
-        selectedPackages.push({
-            id: packageId,
-            name: label.trim(),
-            price: price
+        // Збір обраних пакетів
+        const checkedPackages = itemElement.querySelectorAll('.package-checkbox:checked');
+        checkedPackages.forEach(checkbox => {
+            const price = parseFloat(checkbox.getAttribute('data-price')) || 0;
+            const packageId = checkbox.getAttribute('data-package-id');
+            const label = checkbox.nextElementSibling.querySelector('span').textContent;
+            packageTotal += price;
+            selectedPackages.push({
+                id: packageId,
+                name: label.trim(),
+                price: price
+            });
         });
-    });
 
-    // Оновлення відображення сум
-    if (serviceTotal > 0) {
-        serviceTotalAmountElement.textContent = serviceTotal.toFixed(2);
-        serviceTotalElement.style.display = 'block';
-    } else {
-        serviceTotalElement.style.display = 'none';
+        // Оновлення відображення сум
+        if (serviceTotal > 0) {
+            serviceTotalAmountElement.textContent = serviceTotal.toFixed(2);
+            serviceTotalElement.style.display = 'block';
+        } else {
+            serviceTotalElement.style.display = 'none';
+        }
+
+        if (packageTotal > 0) {
+            packageTotalAmountElement.textContent = packageTotal.toFixed(2);
+            packageTotalElement.style.display = 'block';
+        } else {
+            packageTotalElement.style.display = 'none';
+        }
+
+        // Оновлення загальної суми
+        const totalPrice = basePrice + serviceTotal + packageTotal;
+        priceElement.textContent = totalPrice.toFixed(2) + ' грн';
+
+        // Збереження в localStorage
+        const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
+        cartData[accommodationId] = {
+            services: selectedServices,
+            packages: selectedPackages,
+            service_total: serviceTotal,
+            package_total: packageTotal,
+            base_price: basePrice,
+            total_price: totalPrice
+        };
+        localStorage.setItem('cartData', JSON.stringify(cartData));
+        console.log('Updated cartData:', cartData);
     }
-
-    if (packageTotal > 0) {
-        packageTotalAmountElement.textContent = packageTotal.toFixed(2);
-        packageTotalElement.style.display = 'block';
-    } else {
-        packageTotalElement.style.display = 'none';
-    }
-
-    // Оновлення загальної суми
-    const totalPrice = basePrice + serviceTotal + packageTotal;
-    priceElement.textContent = totalPrice.toFixed(2) + ' грн';
-
-    // Збереження в localStorage
-    const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
-    cartData[accommodationId] = {
-        services: selectedServices,
-        packages: selectedPackages,
-        service_total: serviceTotal,
-        package_total: packageTotal,
-        base_price: basePrice,
-        total_price: totalPrice
-    };
-    localStorage.setItem('cartData', JSON.stringify(cartData));
-    console.log('Updated cartData:', cartData);
-}
 
     // Save cart data before checkout
-    function saveCartData() {
-    const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
-    document.querySelectorAll('.cart-item').forEach(item => {
-        const accommodationId = item.getAttribute('data-id');
-        updateCartTotal(accommodationId);
-    });
-    localStorage.setItem('cartData', JSON.stringify(cartData));
-    document.getElementById('cartData').value = JSON.stringify(cartData); // Передача в форму
-    console.log('Saved cartData for checkout:', cartData);
-}
+    function saveCartData(event) {
+        event.preventDefault(); // Запобігаємо стандартному відправленню форми
+        const cartData = JSON.parse(localStorage.getItem('cartData') || '{}');
+        document.querySelectorAll('.cart-item').forEach(item => {
+            const accommodationId = item.getAttribute('data-id');
+            updateCartTotal(accommodationId);
+        });
+
+        // Оновлюємо cartData перед передачею
+        const finalCartData = JSON.parse(localStorage.getItem('cartData') || '{}');
+        document.getElementById('cartData').value = JSON.stringify(finalCartData);
+        console.log('Saved cartData for checkout:', finalCartData);
+
+        // Відправляємо форму
+        document.getElementById('checkoutForm').submit();
+    }
+
     // Filter services by category
     function filterServices(accommodationId) {
         const selectedCategory = document.getElementById(`category-select-${accommodationId}`).value;
@@ -356,14 +383,16 @@
         updateCartTotal(accommodationId);
     }
 
-    // Show service modal
+    // Show service modal with map
     function showServiceModal(button) {
         const serviceData = {
             id: button.getAttribute('data-service-id'),
             name: button.getAttribute('data-name'),
             description: button.getAttribute('data-description'),
             price: button.getAttribute('data-price'),
-            image: button.getAttribute('data-image')
+            image: button.getAttribute('data-image'),
+            latitude: parseFloat(button.getAttribute('data-latitude')),
+            longitude: parseFloat(button.getAttribute('data-longitude'))
         };
 
         document.getElementById('modal-service-name').textContent = serviceData.name;
@@ -371,8 +400,42 @@
         document.getElementById('modal-service-price').textContent = serviceData.price;
         document.getElementById('modal-service-image').src = serviceData.image;
 
+        // Очищаємо попередню карту, якщо вона існує
+        const mapElement = document.getElementById('service-map');
+        if (currentMap) {
+            currentMap.remove(); // Видаляємо попередню карту
+            currentMap = null;
+        }
+
+        // Перевіряємо, чи координати є валідними
+        if (isNaN(serviceData.latitude) || isNaN(serviceData.longitude)) {
+            console.error('Invalid coordinates:', serviceData.latitude, serviceData.longitude);
+            mapElement.innerHTML = '<p class="text-danger">Неможливо відобразити карту: координати недоступні.</p>';
+            const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+            modal.show();
+            return;
+        }
+
+        // Ініціалізація нової карти
+        if (mapElement) {
+            currentMap = L.map('service-map').setView([serviceData.latitude, serviceData.longitude], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(currentMap);
+            L.marker([serviceData.latitude, serviceData.longitude]).addTo(currentMap)
+                .bindPopup(serviceData.name)
+                .openPopup();
+        }
+
         const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
         modal.show();
+
+        // Оновлюємо розмір карти після відображення модального вікна
+        document.getElementById('serviceModal').addEventListener('shown.bs.modal', function () {
+            if (currentMap) {
+                currentMap.invalidateSize(); // Перераховуємо розмір карти
+            }
+        }, { once: true });
     }
 
     // Show package modal
@@ -409,10 +472,10 @@
             const li = document.createElement('li');
             li.className = 'mb-1 d-flex align-items-center';
             li.innerHTML = `
-            <img src="${service.image}" alt="${service.name}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 5px; margin-right: 8px;">
-            <span>${service.name} (${service.price} грн)</span>
-            ${service.name.toLowerCase().includes('трансфер') ? '<i class="fas fa-car ms-2" style="color: #28a745;"></i>' : ''}
-        `;
+                <img src="${service.image}" alt="${service.name}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 5px; margin-right: 8px;">
+                <span>${service.name} (${service.price} грн)</span>
+                ${service.name.toLowerCase().includes('трансфер') ? '<i class="fas fa-car ms-2" style="color: #28a745;"></i>' : ''}
+            `;
             servicesList.appendChild(li);
         });
 
@@ -533,10 +596,12 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
+                            // Видаляємо з localStorage
                             removeCartItem(accommodationId);
+                            // Оновлюємо сторінку
                             window.location.reload();
                         } else {
-                            alert(data.error || 'Помилка при видаленні елемента');
+                            alert(data.message || 'Помилка при видаленні елемента');
                         }
                     })
                     .catch(error => {
@@ -582,6 +647,8 @@
     .cart-container {
         max-width: 1200px;
         margin: 0 auto;
+        z-index: auto;
+        margin-top: 80px;
     }
 
     .cart-item:hover .card {
@@ -630,6 +697,12 @@
 
     .badge.text-green-800 {
         color: #065F46;
+    }
+
+    #service-map {
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        overflow: hidden; /* Додано для уникнення обрізання */
     }
 </style>
 @endsection

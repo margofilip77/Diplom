@@ -305,6 +305,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Ініціалізація календаря Flatpickr
         flatpickr(".datepicker", {
             enableTime: false,
             dateFormat: "Y-m-d",
@@ -314,44 +315,53 @@
             defaultDate: null
         });
 
+        // Обробка зміни регіону для завантаження населених пунктів
         document.getElementById('region').addEventListener('change', function() {
-            const region = this.value;
+            const regionName = this.value;
             const settlementSelect = document.getElementById('settlement');
             settlementSelect.innerHTML = '<option value="">Оберіть населений пункт</option>';
             settlementSelect.disabled = true;
 
-            if (region) {
-                fetch(`/settlements-by-region?region=${encodeURIComponent(region)}`, {
+            if (regionName) {
+                fetch(`/settlements-by-region?region=${encodeURIComponent(regionName)}`, {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => response.json())
-                .then(settlements => {
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Помилка сервера: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
                     settlementSelect.disabled = false;
-                    if (settlements.length === 0) {
-                        settlementSelect.innerHTML = '<option value="">Немає доступних населених пунктів</option>';
-                    } else {
-                        settlements.forEach(settlement => {
+                    settlementSelect.innerHTML = '<option value="">Оберіть населений пункт</option>';
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(settlement => {
                             const option = document.createElement('option');
                             option.value = settlement;
                             option.textContent = settlement;
                             settlementSelect.appendChild(option);
                         });
+                    } else {
+                        settlementSelect.innerHTML += '<option value="">Немає доступних населених пунктів</option>';
                     }
                 })
                 .catch(error => {
-                    console.error('Помилка завантаження сіл:', error);
+                    console.error('Помилка завантаження населених пунктів:', error);
                     settlementSelect.innerHTML = '<option value="">Помилка завантаження</option>';
                 });
             }
         });
 
+        // Збір параметрів фільтрів
         function collectFilterParams() {
-            let params = new URLSearchParams();
+            const params = new URLSearchParams();
             const searchForm = document.getElementById('searchForm');
             const formData = new FormData(searchForm);
+
             formData.forEach((value, key) => {
                 if (value.trim() !== "" && value !== "Оберіть регіон" && value !== "Спочатку оберіть регіон") {
                     params.append(key, value);
@@ -361,19 +371,22 @@
             const minPrice = document.getElementById('minPrice').value;
             const maxPrice = document.getElementById('maxPrice').value;
             const sortRating = document.getElementById('sortRating').value;
+
             if (minPrice) params.append('minPrice', minPrice);
             if (maxPrice) params.append('maxPrice', maxPrice);
             if (sortRating) params.append('sort_rating', sortRating);
 
-            const amenities = Array.from(document.querySelectorAll('input[name="amenities[]"]:checked')).map(input => input.value);
+            const amenities = Array.from(document.querySelectorAll('input[name="amenities[]"]:checked'))
+                .map(input => input.value);
             if (amenities.length > 0) params.append('amenities', amenities.join(','));
 
             return params;
         }
 
+        // Застосування фільтрів
         function applyFilters() {
             const params = collectFilterParams();
-            let url = "{{ route('accommodations.search') }}" + (params.toString() ? "?" + params.toString() : "");
+            const url = "{{ route('accommodations.search') }}" + (params.toString() ? "?" + params.toString() : "");
 
             fetch(url, {
                 method: "GET",
@@ -381,7 +394,12 @@
                     "X-Requested-With": "XMLHttpRequest"
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Помилка сервера: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 document.getElementById("initialResults").innerHTML = new DOMParser()
                     .parseFromString(data.html, 'text/html')
@@ -392,10 +410,13 @@
             .catch(error => console.error("Помилка пошуку:", error));
         }
 
+        // Скидання фільтрів
         function resetFilters() {
-            document.getElementById('searchForm').reset();
-            document.getElementById('settlement').innerHTML = '<option value="">Спочатку оберіть регіон</option>';
-            document.getElementById('settlement').disabled = true;
+            const searchForm = document.getElementById('searchForm');
+            searchForm.reset();
+            const settlementSelect = document.getElementById('settlement');
+            settlementSelect.innerHTML = '<option value="">Спочатку оберіть регіон</option>';
+            settlementSelect.disabled = true;
             document.getElementById('minPrice').value = '';
             document.getElementById('maxPrice').value = '';
             document.getElementById('sortRating').value = '';
@@ -407,7 +428,12 @@
                     "X-Requested-With": "XMLHttpRequest"
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Помилка сервера: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 document.getElementById("initialResults").innerHTML = new DOMParser()
                     .parseFromString(data.html, 'text/html')
@@ -418,6 +444,7 @@
             .catch(error => console.error("Помилка скидання:", error));
         }
 
+        // Обробка подій для форм і кнопок
         document.getElementById("searchForm").addEventListener("submit", function(event) {
             event.preventDefault();
             applyFilters();
@@ -433,6 +460,7 @@
             resetFilters();
         });
 
+        // Оновлення кнопок "Улюблені"
         function updateFavoriteButtons() {
             document.querySelectorAll('.toggle-favorite').forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -449,7 +477,12 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Помилка сервера: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         isFavorited = data.is_favorited;
                         this.setAttribute('data-is-favorited', isFavorited.toString());
@@ -466,6 +499,7 @@
             });
         }
 
+        // Ініціалізація кнопок "Улюблені" при завантаженні
         updateFavoriteButtons();
     });
 </script>

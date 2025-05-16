@@ -47,8 +47,17 @@
                     @foreach ($regions as $region)
                         <option value="{{ $region->id }}" {{ old('region_id', $service->region_id) == $region->id ? 'selected' : '' }}>{{ $region->name }}</option>
                     @endforeach
+                    <option value="new" {{ old('region_id') == 'new' ? 'selected' : '' }}>Інший регіон</option>
                 </select>
                 @error('region_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group" id="new_region_group" style="display: none;">
+                <label for="new_region">Новий регіон</label>
+                <input type="text" name="new_region" id="new_region" class="form-control @error('new_region') is-invalid @enderror" value="{{ old('new_region') }}">
+                @error('new_region')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -118,31 +127,71 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-     // Ініціалізація карти
-     var map = L.map('map').setView([48.3794, 31.1656], 6); // Центр України
+document.addEventListener('DOMContentLoaded', function() {
+    // Обробка поля для нового регіону
+    const regionSelect = document.getElementById('region_id');
+    const newRegionGroup = document.getElementById('new_region_group');
+    const newRegionInput = document.getElementById('new_region');
 
-// Додавання тайлів OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
+    function toggleNewRegionField() {
+        const isNew = regionSelect.value === 'new';
+        newRegionGroup.style.display = isNew ? 'block' : 'none';
+        newRegionInput.required = isNew;
+    }
 
-// Початковий маркер
-var marker = L.marker([48.3794, 31.1656]).addTo(map);
+    regionSelect.addEventListener('change', toggleNewRegionField);
+    toggleNewRegionField();
 
-// Оновлення координат при кліку на карті
-map.on('click', function(e) {
-    var lat = e.latlng.lat;
-    var lng = e.latlng.lng;
+    // Ініціалізація карти
+    const lat = parseFloat(document.getElementById('latitude').value);
+    const lng = parseFloat(document.getElementById('longitude').value);
+    var map = L.map('map').setView([lat, lng], 6);
 
-    // Оновлення маркера
-    marker.setLatLng([lat, lng]);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-    // Оновлення полів форми
-    document.getElementById('latitude').value = lat;
-    document.getElementById('longitude').value = lng;
+    var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-    // Оновлення тексту координат
-    document.getElementById('coordinates').innerText = `Широта: ${lat}, Довгота: ${lng}`;
+    marker.on('dragend', function(event) {
+        var position = marker.getLatLng();
+        document.getElementById('latitude').value = position.lat;
+        document.getElementById('longitude').value = position.lng;
+        document.getElementById('coordinates').innerText = `Широта: ${position.lat}, Довгота: ${position.lng}`;
+    });
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        document.getElementById('latitude').value = e.latlng.lat;
+        document.getElementById('longitude').value = e.latlng.lng;
+        document.getElementById('coordinates').innerText = `Широта: ${e.latlng.lat}, Довгота: ${e.latlng.lng}`;
+    });
+
+    // Заборона негативних значень для ціни
+    const priceInput = document.getElementById('price');
+    priceInput.addEventListener('keydown', function(event) {
+        if (event.key === '-') {
+            event.preventDefault();
+        }
+    });
+    priceInput.addEventListener('input', function() {
+        if (this.value < 0) {
+            this.value = 0;
+        }
+    });
+
+    // Обмеження координат
+    const latitudeInput = document.getElementById('latitude');
+    latitudeInput.addEventListener('input', function() {
+        if (this.value < -90) this.value = -90;
+        if (this.value > 90) this.value = 90;
+    });
+
+    const longitudeInput = document.getElementById('longitude');
+    longitudeInput.addEventListener('input', function() {
+        if (this.value < -180) this.value = -180;
+        if (this.value > 180) this.value = 180;
+    });
 });
 </script>
 @endsection

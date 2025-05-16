@@ -1,217 +1,282 @@
 @extends('layouts.app')
 
 @section('content')
-    @php
-        $arrowImage = asset('/images/arrow.png');
-    @endphp
 
-    <style>
-        .banner {
-            background-image: var(--banner-bg-image);
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            height: 300px;
-        }
+<style>
+    :root {
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --secondary-color: #f3f4f6;
+        --text-color: #111827;
+        --border-color: #e5e7eb;
+        --error-color: #ef4444;
+        --success-color: #10b981;
+        --dark-bg: #1f2937;
+        --dark-text: #f9fafb;
+    }
 
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7));
-            z-index: 1;
-        }
+    .dark {
+        --primary-color: #6366f1;
+        --primary-hover: #4f46e5;
+        --secondary-color: #1f2937;
+        --text-color: #f9fafb;
+        --border-color: #374151;
+        --error-color: #f87171;
+        --success-color: #34d399;
+    }
 
-        .banner-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            color: white;
-            padding: 4rem 6rem;
-        }
+    .hero-section {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), var(--hero-bg);
+        background-size: cover;
+        background-position: center;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
 
-        .cta-buttons a {
-            text-decoration: none;
-            color: inherit;
-        }
+    .hero-content {
+        text-align: center;
+        color: white;
+        max-width: 800px;
+        padding: 2rem;
+    }
 
-        .cta-buttons button {
-            transition: all 0.3s ease-in-out;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-        }
+    .cta-button {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-block;
+        margin: 0.5rem;
+    }
 
-        .cta-buttons button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            background-color: #45a049;
-        }
+    .cta-button:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-        .cta-buttons button:nth-child(3) {
-            background-color: #FF9800;
-        }
+    .secondary-button {
+        background-color: #f59e0b;
+    }
 
-        .cta-buttons button:nth-child(3):hover {
-            background-color: #f57c00;
-        }
+    .secondary-button:hover {
+        background-color: #d97706;
+    }
 
-        .info-section {
-            padding-top: 2rem;
-            padding-bottom: 1rem;
-            background-color: #f7f7f7;
-        }
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
 
-        .info-title {
-            font-size: 2rem;
-            md:text-3xl;
-            font-weight: bold;
-            color: #374151;
-            margin-bottom: 1.5rem;
-        }
+    .section-description {
+        color: #6b7280;
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 2rem;
+    }
 
-        .info-description {
-            font-size: 1rem;
-            md:text-lg;
-            color: #6B7280;
-            margin-bottom: 2.5rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: center;
-        }
+    .dark .section-description {
+        color: #9ca3af;
+    }
 
-        .package-card {
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-        }
+    .package-card {
+        background-color: white;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
 
-        .package-card:hover {
-            transform: translateY(-0.5rem);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+    .dark .package-card {
+        background-color: var(--dark-bg);
+        border: 1px solid var(--border-color);
+    }
 
-        .package-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #374151;
-        }
+    .package-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
 
-        .package-price {
-            font-size: 1.25rem;
-            color: #10B981;
-            font-weight: 500;
-        }
+    .package-content {
+        padding: 1.5rem;
+    }
 
-        .service-item {
-            display: flex;
-            align-items: center;
-            color: #6B7280;
-            margin-bottom: 0.5rem;
-        }
+    .package-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
 
-        .service-item i {
-            margin-right: 0.75rem;
-            color: #48BB78;
-        }
+    .package-description {
+        color: #6b7280;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
 
-        .contact-form input[type="text"],
-        .contact-form input[type="email"],
-        .contact-form textarea {
-            border-radius: 0.5rem;
-            border: 1px solid #D1D5DB;
-            padding: 0.75rem;
-            width: 100%;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
+    .dark .package-description {
+        color: #9ca3af;
+    }
 
-        .contact-form button {
-            border-radius: 0.5rem;
-            padding: 0.75rem 2rem;
-            font-weight: 500;
-            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            background-color: #10B981;
-            color: white;
-            border: none;
-        }
+    .service-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        color: #6b7280;
+    }
 
-        .contact-form button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            background-color: #0b815e;
-        }
-        .line-through {
-    text-decoration: line-through;
-    color: #6b7280;
-}
-    </style>
+    .dark .service-item {
+        color: #d1d5db;
+    }
 
-    <section class="banner min-h-[70vh] flex items-center justify-center" style="--banner-bg-image: url('{{ asset('images/banner2.jpg') }}');">
-        <div class="overlay"></div>
-        <div class="banner-content container relative z-20 text-center text-white px-6 md:px-12">
-            <h1 class="text-3xl md:text-5xl font-bold mb-4 animate__animated animate__fadeInDown">Відчуйте гармонію природи</h1>
-            <p class="text-lg md:text-xl text-gray-200 mb-8 animate__animated animate__fadeIn" style="animation-delay: 0.3s;">
-                Насолоджуйтесь єднанням з природою. Обирайте затишне житло та послуги для вашого ідеального відпочинку.
-            </p>
-            <div class="cta-buttons flex flex-col sm:flex-row justify-center items-center gap-4 animate__animated animate__zoomIn" style="animation-delay: 0.6s;">
-                <a href="{{ route('accommodations.index') }}">
-                    <button>Знайти помешкання</button>
-                </a>
-                <span class="text-gray-200 font-semibold hidden sm:inline">або</span>
-                <a href="#packages">
-                    <button>Переглянути пакети</button>
-                </a>
-            </div>
+    .service-icon {
+        color: var(--success-color);
+        margin-right: 0.5rem;
+    }
+
+    .price-container {
+        margin: 1.5rem 0;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
+
+    .discounted-price {
+        color: var(--success-color);
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .contact-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        background-color: white;
+        color: var(--text-color);
+    }
+
+    .dark .form-input {
+        background-color: var(--dark-bg);
+        border-color: var(--border-color);
+    }
+
+    .form-textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .submit-button {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .submit-button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #6b7280;
+        padding: 2rem;
+    }
+
+    .dark .empty-state {
+        color: #9ca3af;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+    }
+</style>
+
+<section class="hero-section" style="--hero-bg: url('{{ asset('images/banner2.jpg') }}')">
+    <div class="hero-content">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">Відчуйте гармонію природи</h1>
+        <p class="text-xl mb-8">Насолоджуйтесь єднанням з природою. Обирайте затишне житло та послуги для вашого ідеального відпочинку.</p>
+        <div class="flex flex-wrap justify-center">
+            <a href="{{ route('accommodations.index') }}" class="cta-button">Знайти помешкання</a>
+            <a href="#packages" class="cta-button secondary-button">Переглянути пакети</a>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="info-section">
-        <div class="container mx-auto px-6 md:px-12 text-center">
-            <h2 class="info-title animate__animated animate__fadeIn">Спеціальні пропозиції та пакети послуг</h2>
-            <p class="info-description animate__animated animate__fadeIn" style="animation-delay: 0.3s;">
-                Спочатку оберіть помешкання, а потім додайте один із наших пакетів послуг у кошику для незабутнього відпочинку.
-            </p>
-        </div>
-    </section>
+<section class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-4">
+        <h2 class="section-title">Спеціальні пропозиції та пакети послуг</h2>
+        <p class="section-description">
+            Спочатку оберіть помешкання, а потім додайте один із наших пакетів послуг у кошику для незабутнього відпочинку.
+        </p>
+    </div>
+</section>
 
-    <section id="packages" class="py-16 bg-white dark:bg-gray-800">
-    <div class="container mx-auto px-6 md:px-12">
+<section id="packages" class="py-16 bg-white dark:bg-gray-900">
+    <div class="container mx-auto px-4">
         @if ($packages->isEmpty())
-            <p class="text-center text-gray-600 dark:text-gray-300 text-lg">На жаль, наразі немає доступних пакетів послуг.</p>
+            <div class="empty-state">
+                <p>На жаль, наразі немає доступних пакетів послуг.</p>
+            </div>
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach ($packages as $package)
-                    <div class="package-card bg-white dark:bg-gray-900 shadow-lg">
-                        <div class="p-6">
-                            <h3 class="package-title dark:text-gray-100 mb-3">{{ $package->name }}</h3>
-                            <p class="text-gray-700 dark:text-gray-300 text-sm mb-4">{{ $package->description ?? 'Опис цього пакету поки що відсутній.' }}</p>
+                    <div class="package-card">
+                        <div class="package-content">
+                            <h3 class="package-title">{{ $package->name }}</h3>
+                            <p class="package-description">{{ $package->description ?? 'Опис цього пакету поки що відсутній.' }}</p>
+                            
                             <ul class="mb-4">
                                 @foreach ($package->services as $service)
-                                    <li class="service-item dark:text-gray-200">
-                                        <i class="fas fa-check-circle"></i> {{ $service->name }}
+                                    <li class="service-item">
+                                        <span class="service-icon"><i class="fas fa-check-circle"></i></span>
+                                        {{ $service->name }}
                                     </li>
                                 @endforeach
                             </ul>
-                            <div class="mb-4">
+                            
+                            <div class="price-container">
                                 @if ($package->discount > 0)
-                                    <p class="text-gray-500 line-through">До знижки: {{ $package->originalPrice() }} грн</p>
-                                    <p class="package-price dark:text-emerald-400">Після знижки ({{ $package->discount }}%): {{ $package->calculatePrice() }} грн</p>
+                                    <p class="original-price">До знижки: {{ $package->originalPrice() }} грн</p>
+                                    <p class="discounted-price">Після знижки ({{ $package->discount }}%): {{ $package->calculatePrice() }} грн</p>
                                 @else
-                                    <p class="package-price dark:text-emerald-400">Ціна: {{ $package->calculatePrice() }} грн</p>
+                                    <p class="discounted-price">Ціна: {{ $package->calculatePrice() }} грн</p>
                                 @endif
                             </div>
-                            <a href="{{ route('packages.show', $package->id) }}" class="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-300">
+                            
+                            <button class="cta-button inline-block w-full text-center"
+                                    data-package-id="{{ $package->id }}"
+                                    data-name="{{ addslashes($package->name) }}"
+                                    data-description="{{ addslashes($package->description ?? 'Опис цього пакету поки що відсутній.') }}"
+                                    data-price="{{ $package->calculatePrice() }}"
+                                    data-discount="{{ $package->discount }}"
+                                    data-original-price="{{ $package->originalPrice() }}"
+                                    data-services="{{ json_encode($package->services->map(fn($service) => ['name' => $service->name])) }}"
+                                    onclick="showPackageModal(this)">
                                 Детальніше
-                            </a>
+                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -220,41 +285,92 @@
     </div>
 </section>
 
-    <section class="py-16 bg-gray-100 dark:bg-gray-900">
-        <div class="container mx-auto px-6 md:px-12">
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white text-center mb-8">Залишились питання? Зв'яжіться з нами!</h2>
-            <p class="text-md md:text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto text-center">
-                Наша команда з радістю відповість на всі ваші запитання та допоможе спланувати ідеальний зелений відпочинок.
-            </p>
-            <form action="{{ route('contact.submit') }}" method="POST" class="contact-form max-w-md mx-auto">
-                @csrf
-                <div>
-                    <input type="text" name="name" placeholder="Ваше ім'я" required>
+<!-- Modal for package details -->
+<div class="modal fade" id="packageModal" tabindex="-1" aria-labelledby="packageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="packageModalLabel">Деталі пакета</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3 id="modal-package-name" class="mb-3"></h3>
+                        <p id="modal-package-description" class="text-muted mb-3"></p>
+                        <p class="mb-2"><strong>Ціна:</strong> <span id="modal-package-price"></span> грн</p>
+                        <p class="mb-2 original-price" style="display: none;"><strong>До знижки:</strong> <span id="modal-package-original-price"></span> грн</p>
+                        <p class="mb-2 discount" style="display: none;"><strong>Знижка:</strong> <span id="modal-package-discount"></span>%</p>
+                        <p class="mb-2"><strong>Включені послуги:</strong></p>
+                        <ul id="modal-package-services" class="list-unstyled" style="font-size: 0.9rem;"></ul>
+                    </div>
                 </div>
-                <div>
-                    <input type="email" name="email" placeholder="Ваш Email" required>
-                </div>
-                <div>
-                    <textarea name="message" rows="5" placeholder="Ваше повідомлення" required></textarea>
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-8 rounded-full shadow-md">Надіслати повідомлення</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+            </div>
         </div>
-    </section>
+    </div>
+</div>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</section>
 
-    <script>
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Плавна прокрутка до якорів
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
             });
         });
-    </script>
+    });
+
+    // Show package modal
+    function showPackageModal(button) {
+        const packageData = {
+            id: button.getAttribute('data-package-id'),
+            name: button.getAttribute('data-name'),
+            description: button.getAttribute('data-description'),
+            price: button.getAttribute('data-price'),
+            originalPrice: button.getAttribute('data-original-price'),
+            discount: parseFloat(button.getAttribute('data-discount')),
+            services: JSON.parse(button.getAttribute('data-services'))
+        };
+
+        document.getElementById('modal-package-name').textContent = packageData.name;
+        document.getElementById('modal-package-description').textContent = packageData.description;
+        document.getElementById('modal-package-price').textContent = packageData.price;
+
+        const originalPriceElement = document.querySelector('.original-price');
+        const discountElement = document.querySelector('.discount');
+        if (packageData.discount > 0) {
+            document.getElementById('modal-package-original-price').textContent = packageData.originalPrice;
+            document.getElementById('modal-package-discount').textContent = packageData.discount;
+            originalPriceElement.style.display = 'block';
+            discountElement.style.display = 'block';
+        } else {
+            originalPriceElement.style.display = 'none';
+            discountElement.style.display = 'none';
+        }
+
+        const servicesList = document.getElementById('modal-package-services');
+        servicesList.innerHTML = '';
+        packageData.services.forEach(service => {
+            const li = document.createElement('li');
+            li.className = 'mb-1 d-flex align-items-center';
+            li.innerHTML = `
+                <span class="service-icon"><i class="fas fa-check-circle"></i></span>
+                <span>${service.name}</span>
+            `;
+            servicesList.appendChild(li);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('packageModal'));
+        modal.show();
+    }
+</script>
 @endsection

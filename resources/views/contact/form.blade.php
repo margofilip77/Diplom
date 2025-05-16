@@ -17,7 +17,7 @@
 
         <div class="mb-3">
             <label for="name" class="form-label">Ім'я</label>
-            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', Auth::user()->name ?? '') }}" required>
+            <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ Auth::user()->name }}" readonly>
             @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -25,7 +25,7 @@
 
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
-            <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', Auth::user()->email ?? '') }}" required>
+            <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ Auth::user()->email }}" readonly>
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

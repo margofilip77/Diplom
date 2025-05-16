@@ -41,6 +41,7 @@ class Accommodation extends Model
         'is_available',
         'user_id',
         'rejection_reason',
+        'status',
     ];
 
     // Зв’язок "багато-до-багатьох" з послугами через проміжну таблицю accommodation_services
@@ -125,4 +126,18 @@ class Accommodation extends Model
     {
         return $this->belongsTo(User::class, 'provider_id');
     }
+    public function getBookedDatesAttribute()
+    {
+        return $this->bookings()->select('checkin_date as start_date', 'checkout_date as end_date')->get()->map(function ($booking) {
+            return [
+                'start_date' => \Carbon\Carbon::parse($booking->start_date),
+                'end_date' => \Carbon\Carbon::parse($booking->end_date),
+            ];
+        });
+    }
+// Додайте це відношення
+public function bookings()
+{
+    return $this->hasMany(Booking::class, 'accommodation_id');
+}
 }

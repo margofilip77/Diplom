@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Favorite;
+use App\Models\Booking;
+use Illuminate\Support\Facades\Log;
+use App\Models\SupportMessage;
 
 class ProfileController extends Controller
 {
@@ -20,13 +23,18 @@ class ProfileController extends Controller
      */
     public function edit(): View
     {
-        
         /** @var User $user */
         $user = Auth::user();
 
         // Завантаження зв’язків
         $user = User::with('favorites.accommodation')->find($user->id);
-        return view('profile.edit', compact('user'));
+
+        // Завантажуємо повідомлення служби підтримки для поточного користувача
+        $messages = SupportMessage::where('email', $user->email)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('profile.edit', compact('user', 'messages'));
     }
 
     /**
@@ -94,6 +102,27 @@ class ProfileController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
+
+        // Перевірка пароля
+        $request->validate([
+            'password' => ['required', 'string', function ($attribute, $value, $fail) use ($user) {
+                if (!Hash::check($value, $user->password)) {
+                    $fail('Неправильний пароль.');
+                }
+            }],
+        ], [
+            'password.required' => 'Пароль є обов’язковим.',
+        ]);
+
+        // Очищення пов’язаних даних
+        Favorite::where('user_id', $user->id)->delete();
+        Booking::where('user_id', $user->id)->delete();
+        SupportMessage::where('email', $user->email)->delete();
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Видалення користувача
         Auth::logout();
         $user->delete();
 
@@ -138,5 +167,93 @@ class ProfileController extends Controller
         }
 
         return redirect()->back()->with('status', $message);
+    }
+    public function bookings()
+    {
+        $user = Auth::user();
+        $bookings = Booking::where('user_id', $user->id)
+            ->with(['accommodation.amenities', 'services.service', 'packages.package', 'mealOptions']) // Додаємо mealOptions
+            ->get();
+    
+        $totalAmount = $bookings->sum('total_price');
+    
+        return view('profile.bookings', compact('bookings', 'totalAmount'));
+    }
+    public function cancelBooking(Booking $booking)
+    {
+        // Перевірка, чи належить бронювання користувачу
+        if ($booking->user_id !== Auth::id()) {
+            return redirect()->route('profile.bookings')->with('error', 'Ви не маєте доступу до цього бронювання.');
+        }
+
+        // Перевірка, чи можна скасувати (більше 14 діб)
+        $checkinDate = \Carbon\Carbon::parse($booking->checkin_date);
+        $currentDate = \Carbon\Carbon::now();
+        $daysUntilCheckin = $currentDate->diffInDays($checkinDate, false);
+
+        if ($daysUntilCheckin <= 14) {
+            return redirect()->route('profile.bookings')->with('error', 'Скасувати бронювання можна лише за 14 діб до заїзду.');
+        }
+
+        // Скасування бронювання (видалення)
+        $booking->delete();
+        Log::info('Booking cancelled', [
+            'booking_id' => $booking->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()->route('profile.bookings')->with('success', 'Бронювання успішно скасовано.');
+    }
+
+    public function updateDates(Request $request, Booking $booking)
+    {
+        // Перевірка, чи належить бронювання користувачу
+        if ($booking->user_id !== Auth::id()) {
+            return redirect()->route('profile.bookings')->with('error', 'Ви не маєте доступу до цього бронювання.');
+        }
+    
+        // Перевірка, чи можна змінювати дати (більше 14 діб)
+        $checkinDate = \Carbon\Carbon::parse($booking->checkin_date);
+        $currentDate = \Carbon\Carbon::now();
+        $daysUntilCheckin = $currentDate->diffInDays($checkinDate, false);
+    
+        if ($daysUntilCheckin <= 14) {
+            return redirect()->route('profile.bookings')->with('error', 'Змінити дати можна лише за 14 діб до заїзду.');
+        }
+    
+        // Валідація нових дат і нової суми
+        $request->validate([
+            'checkin_date' => 'required|date|after_or_equal:today',
+            'checkout_date' => 'required|date|after:checkin_date',
+            'new_total_price' => 'required|numeric|min:0', // Валідація нової суми
+        ]);
+    
+        // Оновлення дат і загальної суми
+        $booking->update([
+            'checkin_date' => $request->checkin_date,
+            'checkout_date' => $request->checkout_date,
+            'total_price' => $request->new_total_price, // Оновлюємо total_price у базі
+        ]);
+    
+        Log::info('Booking dates updated', [
+            'booking_id' => $booking->id,
+            'user_id' => Auth::id(),
+            'new_checkin_date' => $request->checkin_date,
+            'new_checkout_date' => $request->checkout_date,
+            'new_total_price' => $request->new_total_price,
+        ]);
+    
+        return redirect()->route('profile.bookings')->with('success', 'Дати бронювання успішно змінено.');
+    }
+    // Додаємо метод для видалення повідомлення користувачем
+    public function deleteSupportMessage(Request $request, SupportMessage $message)
+    {
+        // Перевіряємо, чи належить повідомлення користувачу
+        if ($message->email !== Auth::user()->email) {
+            return redirect()->route('profile.edit')->with('error', 'Ви не маєте доступу до цього повідомлення.');
+        }
+
+        $message->delete();
+        return redirect()->route('profile.edit')->with('status', 'message-deleted');
     }
 }

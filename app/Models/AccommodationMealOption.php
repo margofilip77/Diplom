@@ -9,5 +9,5 @@ class AccommodationMealOption extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['accommodation_id', 'meal_option_id'];
+    protected $fillable = ['accommodation_id', 'meal_option_id', 'price'];
 }

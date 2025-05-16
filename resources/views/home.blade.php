@@ -64,7 +64,7 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="text-success fw-bold">{{ $service->price }} грн</span>
                                     </div>
-                                    <a href="{{ route('services.show', $service->id) }}" class="btn btn-outline-success mt-3 w-100">Детальніше</a>
+                                    <a href="{{ route('services.index') }}" class="btn btn-outline-success mt-3 w-100">Детальніше</a>
                                 </div>
                             </div>
                         </div>
@@ -152,11 +152,7 @@
             <h2 class="fw-bold mb-4 animate__animated animate__fadeIn">Готові до пригод?</h2>
             <p class="lead mb-4 animate__animated animate__fadeIn delay-1">Забронюйте свій ідеальний відпочинок вже сьогодні!</p>
             <a href="{{ route('accommodations.index') }}" class="btn btn-light btn-lg px-5 py-3 me-3 animate__animated animate__zoomIn delay-2">Знайти помешкання</a>
-            @if (Auth::check())
-                <a href="{{ route('logout') }}" class="btn btn-outline-light btn-lg px-5 py-3 animate__animated animate__zoomIn delay-3">Вийти</a>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg px-5 py-3 animate__animated animate__zoomIn delay-3">Увійти</a>
-            @endif
+
         </div>
     </section>
 

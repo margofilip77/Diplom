@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Accommodation;
+use App\Models\Region; // Переконайтеся, що модель Region підключена
 use Illuminate\Http\Request;
 use App\Models\AccommodationPhoto;
 use Illuminate\Support\Facades\DB;
@@ -10,102 +11,144 @@ use App\Models\Meal;
 use App\Models\AmenityCategory;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Amenity;
+use App\Models\Booking;
+use Illuminate\Support\Facades\Log;
 
 class AccommodationController extends Controller
 {
     public function index()
     {
-        $accommodations = Accommodation::with('reviews')->get();
-        $regions = Accommodation::distinct()->pluck('region')->sort();
+        $accommodations = Accommodation::with('reviews')
+            ->where('is_available', 1)
+            ->where('status', 'approved')
+            ->get();
+        $regions = Region::orderBy('id')->pluck('name');
         $amenityCategories = AmenityCategory::with('amenities')->get();
-        return view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories'));
+    
+        // Отримуємо всі унікальні settlement для кожного region_id
+        $regionSettlements = Accommodation::select('region_id', 'settlement')
+            ->distinct('settlement')
+            ->get()
+            ->groupBy('region_id')
+            ->map(function ($group) {
+                return $group->pluck('settlement')->sort()->values()->toArray();
+            })->toArray();
+    
+        return view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories', 'regionSettlements'));
     }
-
+    
     public function search(Request $request)
     {
-        $query = Accommodation::query()->with(['reviews', 'amenities']);
-
-        // Фільтр за регіоном (необов'язковий)
+        $query = Accommodation::query()
+            ->with(['reviews', 'amenities', 'bookings'])
+            ->where('is_available', 1)
+            ->where('status', 'approved');
+    
         if ($request->filled('region')) {
-            $query->where('region', $request->region);
+            $region = Region::where('name', $request->region)->first();
+            if ($region) {
+                $query->where('region_id', $region->id);
+            }
         }
-
-        // Фільтр за селом (необов'язковий)
+    
         if ($request->filled('settlement')) {
             $query->where('settlement', $request->settlement);
         }
-
-        // Фільтр за датами (необов'язковий)
+    
         if ($request->filled('check_in') && $request->filled('check_out')) {
             $query->whereDoesntHave('bookings', function ($q) use ($request) {
-                $q->whereBetween('date', [$request->check_in, $request->check_out]);
+                $q->where(function ($q) use ($request) {
+                    $q->where('checkin_date', '<=', $request->check_out)
+                      ->where('checkout_date', '>=', $request->check_in);
+                });
             });
         } elseif ($request->filled('check_in')) {
             $query->whereDoesntHave('bookings', function ($q) use ($request) {
-                $q->where('date', '>=', $request->check_in);
+                $q->where('checkin_date', '<=', $request->check_in)
+                  ->where('checkout_date', '>=', $request->check_in);
             });
         } elseif ($request->filled('check_out')) {
             $query->whereDoesntHave('bookings', function ($q) use ($request) {
-                $q->where('date', '<=', $request->check_out);
+                $q->where('checkin_date', '<=', $request->check_out)
+                  ->where('checkout_date', '>=', $request->check_out);
             });
         }
-
-        // Фільтр за кількістю гостей (необов'язковий)
+    
+        // Фільтрація за точною кількістю осіб
         if ($request->filled('guests')) {
-            $query->where('capacity', '>=', $request->guests);
+            $guests = (int)$request->guests;
+            $query->where('capacity', '=', $guests); // Змінено на точне співпадіння
         }
-
-        // Фільтр за ціною (необов'язковий)
+    
         if ($request->filled('minPrice')) {
             $query->where('price_per_night', '>=', $request->minPrice);
         }
         if ($request->filled('maxPrice')) {
             $query->where('price_per_night', '<=', $request->maxPrice);
         }
-
-        // Фільтр за зручностями (помешкання має мати всі вибрані зручності)
+    
         if ($request->filled('amenities')) {
             $amenities = array_map('intval', explode(',', $request->amenities));
             $query->whereHas('amenities', function ($q) use ($amenities) {
                 $q->whereIn('amenities.id', $amenities);
             }, '>=', count($amenities));
         }
-
-        // Сортування за рейтингом (використовуємо підзапит для середнього рейтингу)
+    
         if ($request->filled('sort_rating')) {
             $sortDirection = $request->sort_rating === 'asc' ? 'ASC' : 'DESC';
             $query->select('accommodations.*')
-                  ->selectSub(function ($subQuery) {
-                      $subQuery->selectRaw('AVG(rating)')
-                               ->from('reviews')
-                               ->whereColumn('reviews.accommodation_id', 'accommodations.id');
-                  }, 'average_rating')
-                  ->orderByRaw('average_rating IS NULL, average_rating ' . $sortDirection);
+                ->selectSub(function ($subQuery) {
+                    $subQuery->selectRaw('AVG(rating)')
+                        ->from('reviews')
+                        ->whereColumn('reviews.accommodation_id', 'accommodations.id');
+                }, 'average_rating')
+                ->orderByRaw('average_rating IS NULL, average_rating ' . $sortDirection);
         }
-
+    
         $accommodations = $query->get();
-        $regions = Accommodation::distinct()->pluck('region')->sort();
+        $regions = Region::orderBy('id')->pluck('name');
         $amenityCategories = AmenityCategory::with('amenities')->get();
-
+    
+        // Отримуємо всі унікальні settlement для кожного region_id
+        $regionSettlements = Accommodation::select('region_id', 'settlement')
+            ->distinct('settlement')
+            ->get()
+            ->groupBy('region_id')
+            ->map(function ($group) {
+                return $group->pluck('settlement')->sort()->values()->toArray();
+            })->toArray();
+    
         if ($request->ajax()) {
             return response()->json([
-                'html' => view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories'))->render(),
+                'html' => view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories', 'regionSettlements'))->render(),
                 'count' => $accommodations->count()
             ]);
         }
-
-        return view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories'));
+    
+        return view('accommodations.index', compact('accommodations', 'regions', 'amenityCategories', 'regionSettlements'));
     }
 
     public function show($id)
     {
-        $accommodation = Accommodation::with(['amenities', 'city'])->findOrFail($id);
-        $user = Auth::user();
-        $cartItemCount = 0;
-        if ($user && $user->cart && $user->cart->cartMeals) {
-            $cartItemCount = $user->cart->cartMeals->count();
-        }
-        return view('accommodations.details', compact('accommodation', 'cartItemCount'));
+        $accommodation = Accommodation::with(['photos', 'mealOptions', 'amenities', 'reviews'])
+            ->where('is_available', 1)
+            ->where('status', 'approved')
+            ->findOrFail($id);
+
+        $bookings = Booking::where('accommodation_id', $accommodation->id)
+            ->where('checkout_date', '>=', now())
+            ->get(['checkin_date', 'checkout_date']);
+
+        $bookedDates = $bookings->map(function ($booking) {
+            return [
+                'start' => $booking->checkin_date->format('Y-m-d'),
+                'end' => $booking->checkout_date->format('Y-m-d'),
+            ];
+        })->toArray();
+
+        Log::info('Booked dates for accommodation #' . $id . ': ', $bookedDates);
+
+        return view('accommodations.details', compact('accommodation', 'bookedDates'));
     }
 
     public function store(Request $request)
@@ -129,12 +172,18 @@ class AccommodationController extends Controller
                 ]);
             }
         }
-        return redirect()->route('accommodations.index')->with('success', 'Помешкання створено!');
+        return redirect()->route('accommodations.')->with('success', 'Помешкання створено!');
     }
 
     public function showDetails($id)
     {
-        $accommodation = DB::table('accommodations')->find($id);
+        $accommodation = DB::table('accommodations')
+            ->where('is_available', 1)
+            ->where('status', 'approved')
+            ->find($id);
+        if (!$accommodation) {
+            abort(404, 'Помешкання не знайдено або недоступне.');
+        }
         $categories = DB::table('categories')
             ->join('category_amenity', 'categories.id', '=', 'category_amenity.category_id')
             ->join('amenities', 'category_amenity.amenity_id', '=', 'amenities.id')
@@ -146,19 +195,35 @@ class AccommodationController extends Controller
 
     public function getMealsForAccommodation($id)
     {
-        $accommodation = Accommodation::findOrFail($id);
+        $accommodation = Accommodation::where('is_available', 1)
+            ->where('status', 'approved')
+            ->findOrFail($id);
         $meals = $accommodation->mealOptions()->get(['meal_options.name', 'accommodation_meal_option.price']);
         return response()->json($meals);
     }
 
     public function getSettlementsByRegion(Request $request)
     {
-        $region = $request->input('region');
-        $settlements = Accommodation::where('region', $region)
+        $regionName = $request->input('region');
+    
+        if (!$regionName) {
+            return response()->json(['error' => 'Регіон не вказано'], 400);
+        }
+    
+        // Шукаємо регіон, ігноруючи регістр
+        $region = Region::whereRaw('LOWER(name) = ?', [strtolower($regionName)])->first();
+    
+        if (!$region) {
+            Log::warning('Регіон не знайдено в базі: ' . $regionName);
+            return response()->json([]);
+        }
+    
+        $settlements = Accommodation::where('region_id', $region->id)
             ->distinct()
             ->pluck('settlement')
             ->sort()
             ->values();
-        return response()->json($settlements);
+    
+        return response()->json($settlements->toArray());
     }
 }

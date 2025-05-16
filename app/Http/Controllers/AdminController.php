@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ServiceCategory;
 use App\Models\Region;
+use App\Models\SupportMessage;
 
 class AdminController extends Controller
 {
@@ -31,7 +32,12 @@ class AdminController extends Controller
             return redirect()->route('home')->with('error', 'У вас немає доступу до цієї сторінки.');
         }
 
-        return view('admin.dashboard');
+        // Перевіряємо непрочитані повідомлення старше 12 годин
+        $hasUnviewedMessages = SupportMessage::where('is_viewed', false)
+            ->where('created_at', '<=', now()->subHours(12))
+            ->exists();
+
+        return view('admin.dashboard', compact('hasUnviewedMessages'));
     }
 
     public function users()
@@ -94,7 +100,29 @@ class AdminController extends Controller
         $reviews = Review::with(['user', 'accommodation'])->get();
         return view('admin.reviews', compact('reviews'));
     }
-
+    public function blockReview(Review $review)
+    {
+        if (Auth::user()->is_blocked) {
+            return redirect()->route('home')->with('error', 'Ваш обліковий запис заблоковано. Ви не можете виконувати цю дію.');
+        }
+    
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('home')->with('error', 'У вас немає доступу до цієї дії.');
+        }
+    
+        if ($review->is_blocked) {
+            $review->is_blocked = false;
+            $review->blocked_at = null;
+            $statusMessage = 'Відгук успішно розблоковано.';
+        } else {
+            $review->is_blocked = true;
+            $review->blocked_at = now();
+            $statusMessage = 'Відгук успішно заблоковано.';
+        }
+        $review->save();
+    
+        return redirect()->route('admin.reviews')->with('status', $statusMessage);
+    }
     public function approveReview(Review $review)
     {
         $this->checkAdminRole();
@@ -104,15 +132,7 @@ class AdminController extends Controller
         return redirect()->route('admin.reviews')->with('status', 'Відгук підтверджено!');
     }
 
-    public function rejectReview(Review $review)
-    {
-        $this->checkAdminRole();
-        $review->status = 'rejected';
-        $review->save();
-
-        return redirect()->route('admin.reviews')->with('status', 'Відгук відхилено!');
-    }
-
+   
     public function pendingOffers()
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
@@ -135,9 +155,13 @@ class AdminController extends Controller
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return redirect()->route('home')->with('error', 'У вас немає прав для цієї дії.');
         }
-
-        $service->update(['status' => 'approved']);
-        return redirect()->route('admin.pending-offers')->with('status', 'Послугу успішно підтверджено.');
+    
+        $service->update([
+            'status' => 'approved',
+            'is_available' => true, // Додаємо, щоб зробити послугу видимою
+        ]);
+    
+        return redirect()->route('admin.pending-offers')->with('status', 'Послугу успішно підтверджено та опубліковано.');
     }
 
     public function rejectService(Request $request, Service $service)
@@ -161,12 +185,13 @@ class AdminController extends Controller
     public function approveAccommodation(Accommodation $accommodation)
     {
         $this->checkAdminRole();
-        $accommodation->status = 'approved';
-        $accommodation->save();
-
-        return redirect()->route('admin.pending-offers')->with('status', 'Помешкання підтверджено!');
+        $accommodation->update([
+            'status' => 'approved',
+            'is_available' => true, // Додаємо, щоб зробити помешкання видимим
+        ]);
+    
+        return redirect()->route('admin.pending-offers')->with('status', 'Помешкання успішно підтверджено та опубліковано!');
     }
-
     public function rejectAccommodation(Request $request, Accommodation $accommodation)
     {
         $roleCheck = $this->checkAdminRole();

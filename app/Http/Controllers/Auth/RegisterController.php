@@ -7,6 +7,12 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Booking;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class RegisterController extends Controller
 {
@@ -61,12 +67,57 @@ class RegisterController extends Controller
      * @param  array  $data
      * @return \App\Models\User
      */
-    protected function create(array $data)
+    public function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
             'password' => Hash::make($data['password']),
         ]);
+
+        // Прив’язка бронювань за email
+        $guestEmail = Session::get('guest_email');
+        $bookingIds = Session::get('booking_ids', []);
+
+        if ($guestEmail && $guestEmail === $data['email']) {
+            $bookings = Booking::where('email', $data['email'])
+                ->whereIn('id', $bookingIds)
+                ->whereNull('user_id')
+                ->get();
+
+            if ($bookings->isNotEmpty()) {
+                foreach ($bookings as $booking) {
+                    $booking->update([
+                        'user_id' => $user->id,
+                        'token' => null,
+                    ]);
+                    Log::info('Booking attached to user during registration', [
+                        'user_id' => $user->id,
+                        'booking_id' => $booking->id,
+                        'email' => $data['email'],
+                    ]);
+                }
+            } else {
+                Log::info('No bookings found for email during registration', [
+                    'email' => $data['email'],
+                    'booking_ids' => $bookingIds,
+                ]);
+            }
+
+            // Очищаємо сесію після прив’язки
+            Session::forget('guest_email');
+            Session::forget('booking_ids');
+        } else {
+            Log::warning('Guest email does not match or is not set', [
+                'guest_email' => $guestEmail,
+                'provided_email' => $data['email'],
+            ]);
+        }
+
+        event(new Registered($user));
+        $this->guard()->login($user);
+
+        return $user;
     }
 }

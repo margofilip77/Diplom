@@ -1,15 +1,15 @@
-=<?php
+<?php
 
-    namespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
-    use App\Models\Accommodation;
-    use App\Models\Review;
-    use Illuminate\Http\Request;
-    use Illuminate\Support\Facades\Auth;
+use App\Models\Accommodation;
+use App\Models\Review;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-    class ReviewController extends Controller
-    {
-        public function store(Request $request, $accommodationId)
+class ReviewController extends Controller
+{
+    public function store(Request $request, $accommodationId)
     {
         $request->validate([
             'rating' => 'required|integer|between:1,5',
@@ -40,4 +40,4 @@
 
         return redirect()->back()->with('success', 'Відгук успішно видалено.');
     }
-    }
+}

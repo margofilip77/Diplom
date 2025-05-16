@@ -139,10 +139,16 @@
                     @foreach ($regions as $region)
                         <option value="{{ $region->id }}" {{ old('region_id', $accommodation->region_id) == $region->id ? 'selected' : '' }}>{{ $region->name }}</option>
                     @endforeach
+                    <option value="new">Інший регіон</option>
                 </select>
                 @error('region_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
+            </div>
+
+            <div class="form-group" id="new_region_group" style="display: none;">
+                <label for="new_region">Новий регіон</label>
+                <input type="text" name="new_region" id="new_region" class="form-control" value="{{ old('new_region') }}">
             </div>
 
             <div class="form-group">
@@ -189,7 +195,7 @@
             </div>
 
             <div class="form-group">
-                <label for="is_available">Доступність</label>
+                <label for="is_available">Доступність для бронювання</label>
                 <select name="is_available" id="is_available" class="form-control @error('is_available') is-invalid @enderror" required>
                     <option value="1" {{ old('is_available', $accommodation->is_available) ? 'selected' : '' }}>Доступно</option>
                     <option value="0" {{ old('is_available', $accommodation->is_available) ? '' : 'selected' }}>Недоступно</option>
@@ -199,8 +205,195 @@
                 @enderror
             </div>
 
+            <!-- Розділ для редагування дат бронювань -->
+            <div class="form-group mt-5">
+                <h3>Бронювання для цього помешкання</h3>
+                @if($accommodation->bookings->isEmpty())
+                    <p>Наразі немає бронювань для цього помешкання.</p>
+                @else
+                    <div class="row">
+                        @foreach($accommodation->bookings as $booking)
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow-sm" style="border-radius: 15px;">
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">Бронювання #{{ $booking->id }}</h5>
+                                        <p class="mb-1">
+                                            <strong>Дата заїзду:</strong> {{ $booking->checkin_date }}
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Дата виїзду:</strong> {{ $booking->checkout_date }}
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Сума:</strong> {{ $booking->total_price }} грн
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Ім'я:</strong> {{ $booking->name }}
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Email:</strong> {{ $booking->email }}
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Телефон:</strong> {{ $booking->phone }}
+                                        </p>
+                                        @if($booking->comments)
+                                            <p class="mb-1">
+                                                <strong>Коментарі:</strong> {{ $booking->comments }}
+                                            </p>
+                                        @endif
+
+                                        <!-- Логіка для кнопки зміни дат -->
+                                        @php
+                                            $checkinDate = \Carbon\Carbon::parse($booking->checkin_date);
+                                            $currentDate = \Carbon\Carbon::now();
+                                            $daysUntilCheckin = $currentDate->diffInDays($checkinDate, false);
+                                            $canEdit = $daysUntilCheckin > 14;
+                                        @endphp
+
+                                        <div class="mt-3">
+                                            <button class="btn btn-primary" style="border-radius: 25px;" data-bs-toggle="modal" data-bs-target="#editBookingDatesModal{{ $booking->id }}" @if(!$canEdit) disabled @endif>
+                                                Змінити дати
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Модальне вікно для зміни дат бронювання -->
+                            <div class="modal fade" id="editBookingDatesModal{{ $booking->id }}" tabindex="-1" aria-labelledby="editBookingDatesModalLabel{{ $booking->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editBookingDatesModalLabel{{ $booking->id }}">Змінити дати бронювання #{{ $booking->id }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form action="{{ route('provider.accommodation.booking.update.dates', [$accommodation->id, $booking->id]) }}" method="POST">
+                                                @csrf
+                                                @method('PATCH')
+                                                <div class="mb-3">
+                                                    <label for="checkin_date_{{ $booking->id }}" class="form-label">Дата заїзду</label>
+                                                    <input type="date" class="form-control" id="checkin_date_{{ $booking->id }}" name="checkin_date" value="{{ $booking->checkin_date }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="checkout_date_{{ $booking->id }}" class="form-label">Дата виїзду</label>
+                                                    <input type="date" class="form-control" id="checkout_date_{{ $booking->id }}" name="checkout_date" value="{{ $booking->checkout_date }}" required>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary" style="border-radius: 25px;">Зберегти зміни</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
             <button type="submit" class="btn btn-primary">Оновити помешкання</button>
         </form>
     @endif
 </div>
+
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-control, .form-select {
+        border-radius: 6px;
+        box-shadow: none;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .btn-primary {
+        border-radius: 6px;
+        padding: 10px 20px;
+    }
+    .btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const regionSelect = document.getElementById('region_id');
+    const newRegionGroup = document.getElementById('new_region_group');
+    const newRegionInput = document.getElementById('new_region');
+
+    function toggleNewRegionField() {
+        const isNew = regionSelect.value === 'new';
+        newRegionGroup.style.display = isNew ? 'block' : 'none';
+        newRegionInput.required = isNew;
+    }
+
+    regionSelect.addEventListener('change', toggleNewRegionField);
+    toggleNewRegionField();
+
+    // Ініціалізація карти
+    const lat = parseFloat(document.getElementById('latitude').value);
+    const lng = parseFloat(document.getElementById('longitude').value);
+    var map = L.map('map').setView([lat, lng], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    marker.on('dragend', function(event) {
+        var position = marker.getLatLng();
+        document.getElementById('latitude').value = position.lat;
+        document.getElementById('longitude').value = position.lng;
+    });
+
+    map.on('click', function(event) {
+        marker.setLatLng(event.latlng);
+        document.getElementById('latitude').value = event.latlng.lat;
+        document.getElementById('longitude').value = event.latlng.lng;
+    });
+
+    // Заборона негативних значень
+    function preventNegativeInput(input, minValue = 0) {
+        input.addEventListener('keydown', function(event) {
+            if (event.key === '-') {
+                event.preventDefault();
+            }
+        });
+        input.addEventListener('input', function() {
+            if (this.value < minValue) {
+                this.value = minValue;
+            }
+        });
+    }
+
+    const pricePerNightInput = document.getElementById('price_per_night');
+    preventNegativeInput(pricePerNightInput);
+
+    const capacityInput = document.getElementById('capacity');
+    preventNegativeInput(capacityInput, 1);
+
+    const bedsInput = document.getElementById('beds');
+    preventNegativeInput(bedsInput, 1);
+
+    const ageRestrictionsInput = document.getElementById('age_restrictions');
+    preventNegativeInput(ageRestrictionsInput);
+
+    const latitudeInput = document.getElementById('latitude');
+    preventNegativeInput(latitudeInput, -90);
+    latitudeInput.addEventListener('input', function() {
+        if (this.value > 90) this.value = 90;
+    });
+
+    const longitudeInput = document.getElementById('longitude');
+    preventNegativeInput(longitudeInput, -180);
+    longitudeInput.addEventListener('input', function() {
+        if (this.value > 180) this.value = 180;
+    });
+});
+</script>
 @endsection
